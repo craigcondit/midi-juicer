@@ -52,11 +52,9 @@
 	</repositories>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<coremidi4j.version>1.1</coremidi4j.version>
-		<jool.version>0.9.12</jool.version>
-		<slf4j.version>1.7.25</slf4j.version>
-		<log4j.version>1.2.17</log4j.version>
+		<jna.version>4.5.0</jna.version>
 		<junit.version>4.12</junit.version>
+		<mockito.version>2.12.0</mockito.version>
 		<maven.project.info.reports.plugin.version>2.9</maven.project.info.reports.plugin.version>
 		<jacoco.maven.plugin.version>0.7.9</jacoco.maven.plugin.version>
 		<maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
@@ -68,14 +66,9 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>uk.co.xfactory-librarians</groupId>
-			<artifactId>coremidi4j</artifactId>
-			<version>${coremidi4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jooq</groupId>
-			<artifactId>jool</artifactId>
-			<version>${jool.version}</version>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>${jna.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -84,19 +77,10 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>${log4j.version}</version>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>
