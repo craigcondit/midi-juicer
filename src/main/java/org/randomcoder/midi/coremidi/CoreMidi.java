@@ -46,22 +46,20 @@ public class CoreMidi {
 		notifyRefCon.setLong(0L, 12345L);
 		IntByReference clientPtr = new IntByReference();
 
-		CoreMidiPeer.MIDINotifyProc proc = (message, refCon) -> {
+		MIDINotifyProc proc = (message, refCon) -> {
 			System.out.printf("MIDINotifyProc message: %s refCon: %s%n", message, refCon);
 		};
 
-		int result = peer.MIDIClientCreate(
-				name, proc, notifyRefCon, clientPtr);
-
+		// create a client
+		int result = peer.MIDIClientCreate(name, proc, notifyRefCon, clientPtr);
 		System.out.printf("MIDIClientCreate Result: %s%n", result);
 
 		int client = clientPtr.getValue();
 		System.out.printf("Client: %d%n", client);
 
-		// create a client
 		CFStringRef portName = CFStringRef.createNative("Darwin Native CoreMIDI - Port 1");
 
-		CoreMidiPeer.MIDIReadProc readProc = (pktlist, readProcRefCon, srcConnRefCon) -> {
+		MIDIReadProc readProc = (pktlist, readProcRefCon, srcConnRefCon) -> {
 			// convert readProcRefCon into something useful
 			long readProcRefConValue = readProcRefCon.getLong(0L);
 
@@ -88,13 +86,40 @@ public class CoreMidi {
 			}
 		};
 
+		// create an input port
+		Memory inputPortRefCon = new Memory(8);
+		inputPortRefCon.setLong(0L, 34567L);
+		CFStringRef inputName = CFStringRef.createNative("Input");
+		IntByReference inputPortRef = new IntByReference();
+		result = peer.MIDIInputPortCreate(client, inputName, readProc, inputPortRefCon, inputPortRef);
+		System.out.printf("MIDIInputPortCreate Result: %s%n", result);
+
+		int inputPort = inputPortRef.getValue();
+		System.out.printf("Input Port: %d%n", inputPort);
+
+		// find the source corresponding to MidiPipe's virtual output 1
+		// NOTE: ID is not consistent between runs :(
+		IntByReference sourceRef = new IntByReference();
+		IntByReference sourceTypeRef = new IntByReference();
+		result = peer.MIDIObjectFindByUniqueID(-1301456318, sourceRef, sourceTypeRef);
+		System.out.printf("MIDIObjectFindByUniqueID Result: %s%n", result);
+
+		int source = sourceRef.getValue();
+		System.out.printf("MidiPipe Source: %d%n", source);
+		
+		// connect input port to source
+		Memory connRefCon = new Memory(8);
+		inputPortRefCon.setLong(0L, 45678);
+		result = peer.MIDIPortConnectSource(inputPort, source, connRefCon);
+		System.out.printf("MIDIPortConnectSource Result: %s%n", result);
+		
 		// create a destination
 		Memory readRefCon = new Memory(8);
 		readRefCon.setLong(0L, 23456L);
 		IntByReference destPtr = new IntByReference();
 
 		result = peer.MIDIDestinationCreate(client, portName, readProc, readRefCon, destPtr);
-		System.out.printf("MIDIInputPortCreate Result: %s%n", result);
+		System.out.printf("MIDIDestinationCreate Result: %s%n", result);
 
 		int dest = destPtr.getValue();
 		System.out.printf("Destination: %d%n", dest);
@@ -121,7 +146,7 @@ public class CoreMidi {
 		return peer().MIDIGetNumberOfDestinations();
 	}
 
-	public List<CoreMidiDevice> getDevices() {
+	public void getDevices() {
 		CoreFoundationPeer cf = cf();
 		CoreMidiPeer peer = peer();
 		CoreMidiPropertyResolver resolver = resolver();
@@ -142,7 +167,7 @@ public class CoreMidi {
 			online.add(peer.MIDIGetDestination(i));
 		}
 
-		for (Integer dev : online) {
+		for (int dev : online) {
 			String name = stringProperty(cf, peer, resolver, dev, CoreMidiProperty.kMIDIPropertyName);
 			String manufacturer = stringProperty(cf, peer, resolver, dev, CoreMidiProperty.kMIDIPropertyManufacturer);
 			String model = stringProperty(cf, peer, resolver, dev, CoreMidiProperty.kMIDIPropertyModel);
@@ -223,6 +248,14 @@ public class CoreMidi {
 			System.out.printf("  UniqueID: %d%n", uniqueId);
 			System.out.printf("  DeviceID: %d%n", deviceId);
 
+			IntByReference findByUniqueIdRef = new IntByReference();
+			IntByReference findByUniqueIdType = new IntByReference();
+			int result = peer.MIDIObjectFindByUniqueID(uniqueId, findByUniqueIdRef, findByUniqueIdType);
+			System.out.printf("  Result of MIDIObjectFindByUniqueID: %d%n", result);
+			System.out.printf("  MIDIObjectFindByUniqueID dev: %d%n", findByUniqueIdRef.getValue());
+			System.out.printf("  MIDIObjectFindByUniqueID type: %s%n",
+					MIDIObjectType.byValue(findByUniqueIdType.getValue()));
+
 			// these are endpoint-only
 			// System.out.printf(" ReceiveChannels: %d%n", receiveChannels);
 			// System.out.printf(" TransmitChannels: %d%n", transmitChannels);
@@ -270,7 +303,6 @@ public class CoreMidi {
 
 			System.out.println();
 		}
-		return null;
 	}
 
 	protected Integer intProperty(
