@@ -21,4 +21,9 @@ public interface CoreFoundationPeer extends Library {
 
 	public CFRange.ByValue __CFRangeMake(long loc, long len);
 
+	public void CFRunLoopRun();
+
+	public Pointer CFRunLoopGetCurrent();
+
+	public void CFRunLoopStop(Pointer rl);
 }

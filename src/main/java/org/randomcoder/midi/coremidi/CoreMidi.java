@@ -2,6 +2,7 @@ package org.randomcoder.midi.coremidi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.randomcoder.midi.corefoundation.CFStringRef;
 import org.randomcoder.midi.corefoundation.CoreFoundationPeer;
@@ -12,6 +13,8 @@ import org.randomcoder.midi.system.SystemServiceFactory;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
+
+import io.reactivex.Observable;
 
 public class CoreMidi {
 	private static CoreMidi INSTANCE = new CoreMidi();
@@ -42,22 +45,35 @@ public class CoreMidi {
 
 	public void createClient() {
 		CoreMidiPeer peer = peer();
+		CoreFoundationPeer cf = cf();
 
 		CFStringRef name = CFStringRef.createNative("Darwin Native CoreMIDI");
-		Memory notifyRefCon = new Memory(8);
-		notifyRefCon.setLong(0L, 12345L);
 		IntByReference clientPtr = new IntByReference();
 
 		MIDINotifyProc proc = (message, refCon) -> {
-			System.out.printf("MIDINotifyProc message: %s refCon: %s%n", message, refCon);
+			MIDINotification notify = MIDINotification.fromNative(message, 0);
+			System.out.printf("MIDINotifyProc message: %s%n", notify);
 		};
 
 		// create a client
-		int result = peer.MIDIClientCreate(name, proc, notifyRefCon, clientPtr);
+		int result = peer.MIDIClientCreate(name, proc, null, clientPtr);
 		System.out.printf("MIDIClientCreate Result: %s%n", result);
 
 		int client = clientPtr.getValue();
 		System.out.printf("Client: %d%n", client);
+
+		Pointer currentRunLoop = cf.CFRunLoopGetCurrent();
+		cf.CFRetain(currentRunLoop);
+
+		Observable
+				.timer(10L, TimeUnit.SECONDS)
+				.subscribe(e -> cf.CFRunLoopStop(currentRunLoop));
+
+		System.out.println("Starting run loop...");
+		cf.CFRunLoopRun();
+
+		System.out.println("Stopped run loop...");
+		cf.CFRelease(currentRunLoop);
 
 		// create an output port
 		CFStringRef outputName = CFStringRef.createNative("Output");

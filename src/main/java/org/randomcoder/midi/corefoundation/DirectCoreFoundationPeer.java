@@ -25,4 +25,9 @@ public class DirectCoreFoundationPeer implements CoreFoundationPeer {
 
 	public native CFRange.ByValue __CFRangeMake(long loc, long len);
 
+	public native void CFRunLoopRun();
+
+	public native Pointer CFRunLoopGetCurrent();
+
+	public native void CFRunLoopStop(Pointer rl);
 }

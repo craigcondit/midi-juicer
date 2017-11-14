@@ -53,6 +53,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jna.version>4.5.0</jna.version>
+		<rxjava.version>2.1.6</rxjava.version>
 		<junit.version>4.12</junit.version>
 		<mockito.version>2.12.0</mockito.version>
 		<maven.project.info.reports.plugin.version>2.9</maven.project.info.reports.plugin.version>
@@ -69,6 +70,11 @@
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna</artifactId>
 			<version>${jna.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.reactivex.rxjava2</groupId>
+			<artifactId>rxjava</artifactId>
+			<version>${rxjava.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -128,8 +134,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven.compiler.plugin.version}</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>9</source>
+					<target>9</target>
 				</configuration>
 			</plugin>
 			<plugin>
