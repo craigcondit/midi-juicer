@@ -14,7 +14,7 @@ public class CoreMidiServiceFactory {
 	public static final String LIBRARY_NAME = "CoreMIDI";
 
 	public static CoreMidiPeer getPeer() {
-		return getOrCreate(PEER, CoreMidiServiceFactory::createNativePeer);
+		return getOrCreate(PEER, CoreMidiServiceFactory::createDirectPeer);
 	}
 
 	public static NativeLibrary getNativeLibrary() {
@@ -23,6 +23,10 @@ public class CoreMidiServiceFactory {
 
 	public static CoreMidiPropertyResolver getPropertyResolver() {
 		return getOrCreate(PROPERTY_RESOLVER, DefaultCoreMidiPropertyResolver::new);
+	}
+
+	static CoreMidiPeer createDirectPeer() {
+		return new DirectCoreMidiPeer();
 	}
 
 	static CoreMidiPeer createNativePeer() {

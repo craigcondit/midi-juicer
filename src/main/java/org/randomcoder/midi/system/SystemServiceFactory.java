@@ -13,11 +13,15 @@ public class SystemServiceFactory {
 	public static final String LIBRARY_NAME = "System";
 
 	public static SystemPeer getPeer() {
-		return getOrCreate(PEER, SystemServiceFactory::createNativePeer);
+		return getOrCreate(PEER, SystemServiceFactory::createDirectPeer);
 	}
 
 	public static NativeLibrary getNativeLibrary() {
 		return getOrCreate(NATIVE_LIBRARY, SystemServiceFactory::createNativeLibrary);
+	}
+
+	static SystemPeer createDirectPeer() {
+		return new DirectSystemPeer();
 	}
 
 	static SystemPeer createNativePeer() {

@@ -5,7 +5,7 @@ import com.sun.jna.Pointer;
 
 public interface CoreFoundationPeer extends Library {
 
-	public CFStringRef CFStringCreateWithCharacters(Void alloc, char[] chars, int numChars);
+	public CFStringRef CFStringCreateWithCharacters(Pointer alloc, char[] chars, int numChars);
 
 	public void CFStringGetCharacters(CFStringRef theString, CFRange.ByValue range, Pointer buffer);
 

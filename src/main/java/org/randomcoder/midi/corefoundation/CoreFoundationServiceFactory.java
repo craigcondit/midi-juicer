@@ -13,11 +13,15 @@ public class CoreFoundationServiceFactory {
 	public static final String LIBRARY_NAME = "CoreFoundation";
 
 	public static CoreFoundationPeer getPeer() {
-		return getOrCreate(PEER, CoreFoundationServiceFactory::createNativePeer);
+		return getOrCreate(PEER, CoreFoundationServiceFactory::createDirectPeer);
 	}
 
 	public static NativeLibrary getNativeLibrary() {
 		return getOrCreate(NATIVE_LIBRARY, CoreFoundationServiceFactory::createNativeLibrary);
+	}
+
+	static CoreFoundationPeer createDirectPeer() {
+		return new DirectCoreFoundationPeer();
 	}
 
 	static CoreFoundationPeer createNativePeer() {
