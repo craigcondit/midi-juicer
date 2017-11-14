@@ -25,9 +25,17 @@ public interface CoreMidiPeer extends Library {
 
 	public int MIDIPortDispose(int port);
 
-	// TODO MIDI Packet Lists
-	// MIDIPacketListAdd
-	// MIDIPacketListInit
+	// MIDI Packet Lists
+
+	public Pointer MIDIPacketListAdd(
+			Pointer pktlist,
+			int listSize,
+			Pointer curPacket,
+			long time,
+			int nData,
+			Pointer data);
+
+	public Pointer MIDIPacketListInit(Pointer pktlist);
 
 	// MIDI Objects and Properties
 

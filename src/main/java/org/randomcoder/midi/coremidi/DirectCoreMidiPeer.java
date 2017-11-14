@@ -29,10 +29,17 @@ public class DirectCoreMidiPeer implements CoreMidiPeer {
 
 	public native int MIDIPortDispose(int port);
 
-	// TODO MIDI Packet Lists
+	// MIDI Packet Lists
 
-	// MIDIPacketListAdd
-	// MIDIPacketListInit
+	public native Pointer MIDIPacketListAdd(
+			Pointer pktlist,
+			int listSize,
+			Pointer curPacket,
+			long time,
+			int nData,
+			Pointer data);
+
+	public native Pointer MIDIPacketListInit(Pointer pktlist);
 
 	// MIDI Objects and Properties
 

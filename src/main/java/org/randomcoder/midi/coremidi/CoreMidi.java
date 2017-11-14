@@ -6,6 +6,8 @@ import java.util.List;
 import org.randomcoder.midi.corefoundation.CFStringRef;
 import org.randomcoder.midi.corefoundation.CoreFoundationPeer;
 import org.randomcoder.midi.corefoundation.CoreFoundationServiceFactory;
+import org.randomcoder.midi.system.SystemPeer;
+import org.randomcoder.midi.system.SystemServiceFactory;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
@@ -57,7 +59,34 @@ public class CoreMidi {
 		int client = clientPtr.getValue();
 		System.out.printf("Client: %d%n", client);
 
-		CFStringRef portName = CFStringRef.createNative("Darwin Native CoreMIDI - Port 1");
+		// create an output port
+		CFStringRef outputName = CFStringRef.createNative("Output");
+		IntByReference outputPortRef = new IntByReference();
+		result = peer.MIDIOutputPortCreate(client, outputName, outputPortRef);
+		System.out.printf("MIDIOutputPortCreate Result: %s%n", result);
+
+		int outputPort = outputPortRef.getValue();
+		System.out.printf("Output Port: %d%n", outputPort);
+
+		// find the source corresponding to MidiPipe's virtual output 1
+		// NOTE: ID is not consistent between runs :(
+		IntByReference sourceRef = new IntByReference();
+		IntByReference sourceTypeRef = new IntByReference();
+		result = peer.MIDIObjectFindByUniqueID(795922801, sourceRef, sourceTypeRef);
+		System.out.printf("MIDIObjectFindByUniqueID Result (source): %s%n", result);
+
+		int source = sourceRef.getValue();
+		System.out.printf("MidiPipe Source: %d%n", source);
+
+		// find the dest corresponding to MidiPipe's virtual output 1
+		// NOTE: ID is not consistent between runs :(
+		IntByReference destRef = new IntByReference();
+		IntByReference destTypeRef = new IntByReference();
+		result = peer.MIDIObjectFindByUniqueID(26034853, destRef, destTypeRef);
+		System.out.printf("MIDIObjectFindByUniqueID Result (dest): %s%n", result);
+
+		int dest = destRef.getValue();
+		System.out.printf("MidiPipe Dest: %d%n", dest);
 
 		MIDIReadProc readProc = (pktlist, readProcRefCon, srcConnRefCon) -> {
 			// convert readProcRefCon into something useful
@@ -70,17 +99,17 @@ public class CoreMidi {
 			MIDIPacketList pList = new MIDIPacketList(pktlist, 0);
 			System.out.printf("Packet list: %s%n", pList);
 
-			for (int i = 0; i < pList.numPackets; i++) {
-				MIDIPacket packet = pList.packet[i];
+			for (int i = 0; i < pList.getLength(); i++) {
+				MIDIPacket packet = pList.getPackets().get(i);
 				System.out.printf("Packet: %s%n", packet);
 				System.out.print("  data (hex):");
-				for (short j = 0; j < packet.length; j++) {
-					System.out.printf("  %02x", packet.data[j]);
+				for (short j = 0; j < packet.getLength(); j++) {
+					System.out.printf("  %02x", packet.getData()[j]);
 				}
 				System.out.println();
 				System.out.print("  data (dec):");
-				for (int j = 0; j < packet.length; j++) {
-					System.out.printf(" %3d", packet.data[j] & 0xff);
+				for (int j = 0; j < packet.getLength(); j++) {
+					System.out.printf(" %3d", packet.getData()[j] & 0xff);
 				}
 				System.out.println();
 			}
@@ -97,32 +126,42 @@ public class CoreMidi {
 		int inputPort = inputPortRef.getValue();
 		System.out.printf("Input Port: %d%n", inputPort);
 
-		// find the source corresponding to MidiPipe's virtual output 1
-		// NOTE: ID is not consistent between runs :(
-		IntByReference sourceRef = new IntByReference();
-		IntByReference sourceTypeRef = new IntByReference();
-		result = peer.MIDIObjectFindByUniqueID(-1301456318, sourceRef, sourceTypeRef);
-		System.out.printf("MIDIObjectFindByUniqueID Result: %s%n", result);
-
-		int source = sourceRef.getValue();
-		System.out.printf("MidiPipe Source: %d%n", source);
-		
 		// connect input port to source
 		Memory connRefCon = new Memory(8);
-		inputPortRefCon.setLong(0L, 45678);
+		connRefCon.setLong(0L, 22222);
 		result = peer.MIDIPortConnectSource(inputPort, source, connRefCon);
-		System.out.printf("MIDIPortConnectSource Result: %s%n", result);
-		
-		// create a destination
-		Memory readRefCon = new Memory(8);
-		readRefCon.setLong(0L, 23456L);
-		IntByReference destPtr = new IntByReference();
+		System.out.printf("MIDIPortConnectSource Result (input port -> source): %s%n", result);
 
-		result = peer.MIDIDestinationCreate(client, portName, readProc, readRefCon, destPtr);
-		System.out.printf("MIDIDestinationCreate Result: %s%n", result);
+		// write some MIDI
+		SystemPeer sp = SystemServiceFactory.getPeer();
+		for (int i = 0; i <= 127; i++) {
+			// send note off for previous note / note on for current one
+			long ts = sp.mach_absolute_time();
+			MIDIPacketList pl = new MIDIPacketList();
+			pl.getPackets().add(new MIDIPacket(ts,
+					new byte[] { (byte) 0x90, (byte) Math.max(0, i - 1), (byte) 0 }));
+			pl.getPackets().add(new MIDIPacket(ts,
+					new byte[] { (byte) 0x90, (byte) i, (byte) 0xff }));
+			Pointer p = pl.write();
+			result = peer.MIDISend(outputPort, dest, p);
+			System.out.printf("MIDISend Result: %s%n", result);
 
-		int dest = destPtr.getValue();
-		System.out.printf("Destination: %d%n", dest);
+			try {
+				Thread.sleep(1000L);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			if (i == 127) {
+				ts = sp.mach_absolute_time();
+				pl = new MIDIPacketList();
+				pl.getPackets().add(new MIDIPacket(ts,
+						new byte[] { (byte) 0x90, (byte) i, (byte) 0 }));
+				p = pl.write();
+				result = peer.MIDISend(outputPort, dest, p);
+				System.out.printf("MIDISend Result: %s%n", result);
+			}
+		}
 
 		try {
 			Thread.sleep(600_000L);
