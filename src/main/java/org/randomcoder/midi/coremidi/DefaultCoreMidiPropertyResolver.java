@@ -8,15 +8,15 @@ import org.randomcoder.midi.corefoundation.CFStringRef;
 
 class DefaultCoreMidiPropertyResolver implements CoreMidiPropertyResolver {
 
-	private final ConcurrentMap<CoreMidiProperty, CFStringRef> cache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<CoreMidiProperty, CFStringRef> cache = new ConcurrentHashMap<>();
 
-	@Override
-	public CFStringRef resolve(CoreMidiProperty prop) {
-		Objects.requireNonNull(prop, "prop cannot be null");
-		return cache.computeIfAbsent(prop, k -> {
-			return new CFStringRef(CoreMidiServiceFactory.getNativeLibrary()
-					.getGlobalVariableAddress(k.name()).getPointer(0));
-		});
-	}
+    @Override
+    public CFStringRef resolve(CoreMidiProperty prop) {
+	Objects.requireNonNull(prop, "prop cannot be null");
+	return cache.computeIfAbsent(prop, k -> {
+	    return new CFStringRef(CoreMidiServiceFactory.getNativeLibrary()
+		    .getGlobalVariableAddress(k.name()).getPointer(0));
+	});
+    }
 
 }

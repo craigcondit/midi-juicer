@@ -8,125 +8,164 @@ import com.sun.jna.ptr.IntByReference;
 
 public class DirectCoreMidiPeer implements CoreMidiPeer {
 
-	static {
-		Native.register(CoreMidiServiceFactory.LIBRARY_NAME);
-	}
+    static {
+	Native.register(CoreMidiServiceFactory.LIBRARY_NAME);
+    }
 
-	// MIDI Ports
+    // MIDI Ports
 
-	public native int MIDIInputPortCreate(
-			int client,
-			CFStringRef portName,
-			MIDIReadProc readProc,
-			Pointer refCon,
-			IntByReference outPort);
+    @Override
+    public native int MIDIInputPortCreate(
+	    int client,
+	    CFStringRef portName,
+	    MIDIReadProc readProc,
+	    Pointer refCon,
+	    IntByReference outPort);
 
-	public native int MIDIOutputPortCreate(int client, CFStringRef portName, IntByReference outPort);
+    @Override
+    public native int MIDIOutputPortCreate(int client, CFStringRef portName, IntByReference outPort);
 
-	public native int MIDIPortConnectSource(int port, int source, Pointer connRefCon);
+    @Override
+    public native int MIDIPortConnectSource(int port, int source, Pointer connRefCon);
 
-	public native int MIDIPortDisconnectSource(int port, int source);
+    @Override
+    public native int MIDIPortDisconnectSource(int port, int source);
 
-	public native int MIDIPortDispose(int port);
+    @Override
+    public native int MIDIPortDispose(int port);
 
-	// MIDI Packet Lists
+    // MIDI Packet Lists
 
-	public native Pointer MIDIPacketListAdd(
-			Pointer pktlist,
-			int listSize,
-			Pointer curPacket,
-			long time,
-			int nData,
-			Pointer data);
+    @Override
+    public native Pointer MIDIPacketListAdd(
+	    Pointer pktlist,
+	    int listSize,
+	    Pointer curPacket,
+	    long time,
+	    int nData,
+	    Pointer data);
 
-	public native Pointer MIDIPacketListInit(Pointer pktlist);
+    @Override
+    public native Pointer MIDIPacketListInit(Pointer pktlist);
 
-	// MIDI Objects and Properties
+    // MIDI Objects and Properties
 
-	public native int MIDIObjectFindByUniqueID(
-			int inUniqueID, IntByReference outObject, IntByReference outObjectType);
+    @Override
+    public native int MIDIObjectFindByUniqueID(
+	    int inUniqueID, IntByReference outObject, IntByReference outObjectType);
 
-	public native int MIDIObjectGetIntegerProperty(int obj, CFStringRef propertyID, Pointer outValue);
+    @Override
+    public native int MIDIObjectGetIntegerProperty(int obj, CFStringRef propertyID, Pointer outValue);
 
-	public native int MIDIObjectGetStringProperty(int obj, CFStringRef propertyID, Pointer str);
+    @Override
+    public native int MIDIObjectGetStringProperty(int obj, CFStringRef propertyID, Pointer str);
 
-	public native int MIDIObjectRemoveProperty(int obj, CFStringRef propertyID);
+    @Override
+    public native int MIDIObjectRemoveProperty(int obj, CFStringRef propertyID);
 
-	public native int MIDIObjectSetIntegerProperty(int obj, CFStringRef propertyID, int value);
+    @Override
+    public native int MIDIObjectSetIntegerProperty(int obj, CFStringRef propertyID, int value);
 
-	public native int MIDIObjectSetStringProperty(int obj, CFStringRef propertyID, CFStringRef str);
+    @Override
+    public native int MIDIObjectSetStringProperty(int obj, CFStringRef propertyID, CFStringRef str);
 
-	// MIDI I/O
+    // MIDI I/O
 
-	public native int MIDIFlushOutput(int dest);
+    @Override
+    public native int MIDIFlushOutput(int dest);
 
-	public native int MIDIReceived(int src, Pointer pktlist);
+    @Override
+    public native int MIDIReceived(int src, Pointer pktlist);
 
-	public native int MIDIRestart();
+    @Override
+    public native int MIDIRestart();
 
-	public native int MIDISend(int port, int dest, Pointer pktlist);
+    @Override
+    public native int MIDISend(int port, int dest, Pointer pktlist);
 
-	public native int MIDISendSysex(Pointer request);
+    @Override
+    public native int MIDISendSysex(Pointer request);
 
-	// MIDI External Devices
+    // MIDI External Devices
 
-	public native int MIDIGetNumberOfExternalDevices();
+    @Override
+    public native int MIDIGetNumberOfExternalDevices();
 
-	public native int MIDIGetExternalDevice(int deviceIndex0);
+    @Override
+    public native int MIDIGetExternalDevice(int deviceIndex0);
 
-	// MIDI Entities
+    // MIDI Entities
 
-	public native int MIDIEntityGetDestination(int entity, int destIndex0);
+    @Override
+    public native int MIDIEntityGetDestination(int entity, int destIndex0);
 
-	public native int MIDIEntityGetDevice(int inEntity, IntByReference outDevice);
+    @Override
+    public native int MIDIEntityGetDevice(int inEntity, IntByReference outDevice);
 
-	public native int MIDIEntityGetNumberOfDestinations(int entity);
+    @Override
+    public native int MIDIEntityGetNumberOfDestinations(int entity);
 
-	public native int MIDIEntityGetNumberOfSources(int entity);
+    @Override
+    public native int MIDIEntityGetNumberOfSources(int entity);
 
-	public native int MIDIEntityGetSource(int entity, int sourceIndex0);
+    @Override
+    public native int MIDIEntityGetSource(int entity, int sourceIndex0);
 
-	// MIDI Endpoints
+    // MIDI Endpoints
 
-	public native int MIDIDestinationCreate(
-			int client,
-			CFStringRef name,
-			MIDIReadProc readProc,
-			Pointer refCon,
-			IntByReference outDest);
+    @Override
+    public native int MIDIDestinationCreate(
+	    int client,
+	    CFStringRef name,
+	    MIDIReadProc readProc,
+	    Pointer refCon,
+	    IntByReference outDest);
 
-	public native int MIDIEndpointDispose(int endpt);
+    @Override
+    public native int MIDIEndpointDispose(int endpt);
 
-	public native int MIDIEndpointGetEntity(int inEndpoint, IntByReference outEntity);
+    @Override
+    public native int MIDIEndpointGetEntity(int inEndpoint, IntByReference outEntity);
 
-	public native int MIDIGetDestination(int destIndex0);
+    @Override
+    public native int MIDIGetDestination(int destIndex0);
 
-	public native int MIDIGetNumberOfDestinations();
+    @Override
+    public native int MIDIGetNumberOfDestinations();
 
-	public native int MIDIGetNumberOfSources();
+    @Override
+    public native int MIDIGetNumberOfSources();
 
-	public native int MIDIGetSource(int sourceIndex0);
+    @Override
+    public native int MIDIGetSource(int sourceIndex0);
 
-	public native int MIDISourceCreate(int client, CFStringRef name, IntByReference outSrc);
+    @Override
+    public native int MIDISourceCreate(int client, CFStringRef name, IntByReference outSrc);
 
-	// MIDI Devices
+    // MIDI Devices
 
-	public native int MIDIDeviceGetEntity(int device, int entityIndex0);
+    @Override
+    public native int MIDIDeviceGetEntity(int device, int entityIndex0);
 
-	public native int MIDIDeviceGetNumberOfEntities(int device);
+    @Override
+    public native int MIDIDeviceGetNumberOfEntities(int device);
 
-	public native int MIDIGetDevice(int deviceIndex0);
+    @Override
+    public native int MIDIGetDevice(int deviceIndex0);
 
-	public native int MIDIGetNumberOfDevices();
+    @Override
+    public native int MIDIGetNumberOfDevices();
 
-	// MIDI Clients
+    // MIDI Clients
 
-	public native int MIDIClientCreate(
-			CFStringRef name,
-			MIDINotifyProc notifyProc,
-			Pointer notifyRefCon,
-			IntByReference outClient);
+    @Override
+    public native int MIDIClientCreate(
+	    CFStringRef name,
+	    MIDINotifyProc notifyProc,
+	    Pointer notifyRefCon,
+	    IntByReference outClient);
 
-	public native int MIDIClientDispose(int client);
+    @Override
+    public native int MIDIClientDispose(int client);
 
 }
