@@ -1,6 +1,5 @@
 package org.randomcoder.midi;
 
-import org.randomcoder.fx.rotary.Polarity;
 import org.randomcoder.fx.rotary.Rotary;
 
 import javafx.application.Application;
@@ -26,20 +25,8 @@ public class Juicer extends Application {
 		rotary.setValue(slider.getValue() / 100);
 		Scene scene = new Scene(main);
 		primaryStage.setScene(scene);
-		primaryStage.setTitle("Test rotary control");
+		primaryStage.setTitle("Rotary control test");
 		primaryStage.show();
-
-		// cycle through polarity values
-		new Thread(() -> {
-			while (primaryStage.isShowing()) {
-				try {
-					Thread.sleep(5000L);
-				} catch (InterruptedException e) {
-					break;
-				}
-				rotary.setPolarity(Polarity.values()[(rotary.getPolarity().ordinal() + 1) % 3]);
-			}
-		}).start();
 	}
 
 }

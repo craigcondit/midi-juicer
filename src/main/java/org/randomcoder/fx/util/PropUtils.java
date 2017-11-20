@@ -44,7 +44,7 @@ public class PropUtils {
 	public static <T> ObjectProperty<T> objectProperty(
 			Object bean, String name, T initialValue, Consumer<T> invalidated) {
 
-		return new ObjectPropertyBase<>(initialValue) {
+		return new ObjectPropertyBase<T>(initialValue) {
 
 			protected void invalidated() {
 				invalidated.accept(get());
