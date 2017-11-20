@@ -1,0 +1,40 @@
+.rotary {
+	-fx-background: darkgray;
+	-rc-arc-foreground-color: orange;
+	-rc-arc-background-color: black;
+	-rc-arc-foreground-color-none: gray;
+	-rc-arc-background-color-none: gray;
+	-rc-pointer-color: -rc-arc-background-color;
+	-rc-pointer-color-none: black;
+}
+
+.rotary:pol-none {
+	-rc-arc-foreground-color: -rc-arc-foreground-color-none;
+	-rc-arc-background-color: -rc-arc-foreground-color-none;
+	-rc-pointer-color: -rc-pointer-color-none;
+}
+
+.rotary-container {
+	-fx-padding: 0;
+	-fx-alignment: center;
+	-fx-background-color: -fx-background;
+}
+
+.rotary-arc {
+	-fx-fill: -fx-background;
+	-fx-stroke-line-cap: round;
+}
+
+.rotary-pointer {
+	-fx-fill: -fx-background;
+	-fx-stroke-line-cap: round;
+	-fx-stroke: -rc-pointer-color;
+}
+
+.rotary-arc-foreground {
+	-fx-stroke: -rc-arc-foreground-color;
+}
+
+.rotary-arc-background {
+	-fx-stroke: -rc-arc-background-color;
+}

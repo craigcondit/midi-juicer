@@ -1,8 +1,45 @@
 package org.randomcoder.midi;
 
-public class Juicer {
+import org.randomcoder.fx.rotary.Polarity;
+import org.randomcoder.fx.rotary.Rotary;
 
-    public static void main(String[] args) {
-	System.out.println("Hello, MIDI!");
-    }
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+public class Juicer extends Application {
+
+	public static void main(String[] args) {
+		Application.launch(args);
+	}
+
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		Rotary rotary = new Rotary();
+		Slider slider = new Slider(0, 100, 50);
+
+		slider.valueProperty().addListener((o, oldVal, newVal) -> rotary.setValue(newVal.doubleValue() / 100));
+		rotary.valueProperty().addListener((o, oldVal, newVal) -> slider.setValue(newVal.doubleValue() * 100));
+		VBox main = new VBox(1, rotary, slider);
+		rotary.setValue(slider.getValue() / 100);
+		Scene scene = new Scene(main);
+		primaryStage.setScene(scene);
+		primaryStage.setTitle("Test rotary control");
+		primaryStage.show();
+
+		// cycle through polarity values
+		new Thread(() -> {
+			while (primaryStage.isShowing()) {
+				try {
+					Thread.sleep(5000L);
+				} catch (InterruptedException e) {
+					break;
+				}
+				rotary.setPolarity(Polarity.values()[(rotary.getPolarity().ordinal() + 1) % 3]);
+			}
+		}).start();
+	}
+
 }

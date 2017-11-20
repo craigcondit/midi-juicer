@@ -1,0 +1,7 @@
+.rotary {
+	-rc-sample-color: red;
+}
+
+.rotary .sample-style {
+	-fx-background-color: -rc-sample-color;
+}
