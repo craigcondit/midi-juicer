@@ -108,15 +108,6 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>com.zenjava</groupId>
-				<artifactId>javafx-maven-plugin</artifactId>
-				<version>${javafx.maven.plugin.version}</version>
-				<configuration>
-					<mainClass>org.randomcoder.midi.Juicer</mainClass>
-					<identifier>MIDI Juicer</identifier>
-				</configuration>
-			</plugin>
-			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>${maven.shade.plugin.version}</version>
 				<executions>
