@@ -28,7 +28,7 @@ public class Juicer extends Application {
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < columns; j++) {
 				Rotary rotary = new Rotary();
-				rotary.setValue(0.3 + 0.05 * (i * columns + j));
+				rotary.setPercentage(0.3 + 0.05 * (i * columns + j));
 				rotary.setPolarity(Polarity.values()[(i * columns + j) % 3]);
 				pane.add(rotary, j, i);
 			}

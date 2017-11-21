@@ -84,7 +84,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 	private void registerListeners() {
 		control.widthProperty().addListener(o -> resize());
 		control.heightProperty().addListener(o -> resize());
-		control.valueProperty().addListener((o, ov, nv) -> reposition());
+		control.percentageProperty().addListener((o, ov, nv) -> reposition());
 		control.polarityProperty().addListener((o, ov, nv) -> reposition());
 		arcFore.centerXProperty().addListener((o, ov, nv) -> reposition());
 		arcFore.centerYProperty().addListener((o, ov, nv) -> reposition());
@@ -101,7 +101,6 @@ public class RotarySkin extends SkinBase<Rotary> {
 		if (inBounds(e, pane)) {
 			e.setDragDetect(true);
 			dragging.set(true);
-			mouseDragged(e);
 		}
 	}
 
@@ -149,7 +148,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 			offsetDegrees = 300;
 		}
 
-		control.setValue(offsetDegrees / 300);
+		control.setPercentage(offsetDegrees / 300);
 	}
 
 	private void resize() {
@@ -193,24 +192,26 @@ public class RotarySkin extends SkinBase<Rotary> {
 	}
 
 	private void reposition() {
-		double r = Math.toRadians((control.getValue() * 300) + 120);
+		double value = control.getPercentage();
+
+		double r = Math.toRadians(value * 300 + 120);
 		double dx = arcFore.getRadiusX() * Math.cos(r);
 		double dy = arcFore.getRadiusY() * Math.sin(r);
 
 		switch (control.getPolarity()) {
 		case NORMAL:
 			arcFore.setStartAngle(-120);
-			arcFore.setLength(control.getValue() * -300);
+			arcFore.setLength(value * -300);
 			arcFore.setVisible(true);
 			break;
 		case REVERSED:
 			arcFore.setStartAngle(300);
-			arcFore.setLength(300 - (control.getValue() * 300));
+			arcFore.setLength(300 - (value * 300));
 			arcFore.setVisible(true);
 			break;
 		case NONE:
 			arcFore.setStartAngle(-120);
-			arcFore.setLength(control.getValue() * -300);
+			arcFore.setLength(value * -300);
 			arcFore.setVisible(false);
 			break;
 		}

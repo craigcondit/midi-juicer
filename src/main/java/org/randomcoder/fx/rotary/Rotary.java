@@ -14,7 +14,7 @@ public class Rotary extends Control {
 	public static final PseudoClass POL_REVERSED_PSEUDO_CLASS = PseudoClass.getPseudoClass("pol-reversed");
 	public static final PseudoClass POL_NONE_PSEUDO_CLASS = PseudoClass.getPseudoClass("pol-none");
 
-	private DoubleProperty value;
+	private DoubleProperty percentage;
 	private ObjectProperty<Polarity> polarity;
 
 	public Rotary() {
@@ -27,11 +27,11 @@ public class Rotary extends Control {
 		return new RotarySkin(this);
 	}
 
-	public DoubleProperty valueProperty() {
-		if (value == null) {
-			value = PropUtils.doubleProperty(this, "value", 0d);
+	public DoubleProperty percentageProperty() {
+		if (percentage == null) {
+			percentage = PropUtils.doubleProperty(this, "percentage", 0d);
 		}
-		return value;
+		return percentage;
 	}
 
 	public ObjectProperty<Polarity> polarityProperty() {
@@ -45,12 +45,12 @@ public class Rotary extends Control {
 		return polarity;
 	}
 
-	public double getValue() {
-		return valueProperty().get();
+	public double getPercentage() {
+		return percentageProperty().get();
 	}
 
-	public void setValue(double value) {
-		this.valueProperty().set(Math.min(Math.max(value, 0d), 1d));
+	public void setPercentage(double percentage) {
+		this.percentageProperty().set(Math.min(Math.max(percentage, 0d), 1d));
 	}
 
 	public Polarity getPolarity() {
