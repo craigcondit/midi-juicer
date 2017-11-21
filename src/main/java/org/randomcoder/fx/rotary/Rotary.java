@@ -46,11 +46,11 @@ public class Rotary extends Control {
 	}
 
 	public double getValue() {
-		return valueProperty().doubleValue();
+		return valueProperty().get();
 	}
 
 	public void setValue(double value) {
-		this.valueProperty().set(value);
+		this.valueProperty().set(Math.min(Math.max(value, 0d), 1d));
 	}
 
 	public Polarity getPolarity() {

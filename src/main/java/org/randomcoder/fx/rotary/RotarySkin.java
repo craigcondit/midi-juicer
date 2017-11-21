@@ -12,12 +12,12 @@ import javafx.scene.shape.Line;
 
 public class RotarySkin extends SkinBase<Rotary> {
 
-	private static final double PREFERRED_WIDTH = 500;
-	private static final double PREFERRED_HEIGHT = 500;
-	private static final double MINIMUM_WIDTH = 50;
-	private static final double MINIMUM_HEIGHT = 50;
-	private static final double MAXIMUM_WIDTH = 1024;
-	private static final double MAXIMUM_HEIGHT = 1024;
+	private static final double PREFERRED_WIDTH = 100;
+	private static final double PREFERRED_HEIGHT = 100;
+	private static final double MINIMUM_WIDTH = 20;
+	private static final double MINIMUM_HEIGHT = 20;
+	private static final double MAXIMUM_WIDTH = 10240;
+	private static final double MAXIMUM_HEIGHT = 10240;
 
 	private double size;
 	private double width;
@@ -36,7 +36,6 @@ public class RotarySkin extends SkinBase<Rotary> {
 		this.control = control;
 		init();
 		initGraphics();
-		resize();
 		registerListeners();
 		registerHandlers();
 	}
@@ -156,7 +155,6 @@ public class RotarySkin extends SkinBase<Rotary> {
 	private void resize() {
 		width = control.getWidth();
 		height = control.getHeight();
-
 		size = Math.min(width, height);
 
 		if (width > 0 && height > 0) {
@@ -177,6 +175,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 			arcBack.setRadiusY(radius);
 			arcBack.setStrokeWidth(strokeWidth);
 			arcBack.setStartAngle(-120);
+			arcBack.setLength(-300);
 
 			arcFore.setManaged(false);
 			arcFore.setCenterX(width * 0.5);
@@ -184,7 +183,8 @@ public class RotarySkin extends SkinBase<Rotary> {
 			arcFore.setRadiusX(radius);
 			arcFore.setRadiusY(radius);
 			arcFore.setStrokeWidth(strokeWidth);
-
+			arcFore.setStartAngle(-120);
+			arcFore.setLength(-300);
 			pointer.setManaged(false);
 			pointer.setStrokeWidth(strokeWidth);
 
@@ -193,12 +193,9 @@ public class RotarySkin extends SkinBase<Rotary> {
 	}
 
 	private void reposition() {
-
 		double r = Math.toRadians((control.getValue() * 300) + 120);
 		double dx = arcFore.getRadiusX() * Math.cos(r);
 		double dy = arcFore.getRadiusY() * Math.sin(r);
-
-		arcBack.setLength(-300);
 
 		switch (control.getPolarity()) {
 		case NORMAL:
@@ -212,14 +209,16 @@ public class RotarySkin extends SkinBase<Rotary> {
 			arcFore.setVisible(true);
 			break;
 		case NONE:
+			arcFore.setStartAngle(-120);
+			arcFore.setLength(control.getValue() * -300);
 			arcFore.setVisible(false);
 			break;
 		}
 
-		pointer.setStartX(arcFore.getCenterX());
-		pointer.setEndX(arcFore.getCenterX() + dx);
-		pointer.setStartY(arcFore.getCenterY());
-		pointer.setEndY(arcFore.getCenterY() + dy);
+		pointer.setStartX(arcBack.getCenterX());
+		pointer.setEndX(arcBack.getCenterX() + dx);
+		pointer.setStartY(arcBack.getCenterY());
+		pointer.setEndY(arcBack.getCenterY() + dy);
 	}
 
 }
