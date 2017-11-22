@@ -2,12 +2,17 @@ package org.randomcoder.fx.rotary;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.control.SkinBase;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Arc;
@@ -15,12 +20,11 @@ import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.TextAlignment;
 
 public class RotarySkin extends SkinBase<Rotary> {
 
 	private static final double H_W_RATIO = 0.9;
-	
+
 	private static final double PREFERRED_HEIGHT = 200;
 	private static final double PREFERRED_WIDTH = PREFERRED_HEIGHT * H_W_RATIO;
 	private static final double MINIMUM_HEIGHT = 20;
@@ -37,7 +41,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 	private Arc arcBack;
 	private Arc arcFore;
 	private Line pointer;
-	private Label label;
+	private TextField editor;
 
 	private final AtomicBoolean dragging = new AtomicBoolean(false);
 
@@ -72,8 +76,8 @@ public class RotarySkin extends SkinBase<Rotary> {
 	}
 
 	private void initGraphics() {
-		label = new Label();
-		label.getStyleClass().addAll("rotary-label");
+		editor = new TextField();
+		editor.getStyleClass().addAll("rotary-editor");
 
 		arcBack = new Arc();
 		arcBack.getStyleClass().addAll("rotary-arc", "rotary-arc-background");
@@ -84,7 +88,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 		pointer = new Line();
 		pointer.getStyleClass().addAll("rotary-pointer");
 
-		pane = new StackPane(arcBack, arcFore, pointer, label);
+		pane = new StackPane(arcBack, arcFore, pointer, editor);
 		pane.getStylesheets().addAll(control.getStylesheets());
 		pane.getStyleClass().addAll("rotary-container");
 		pane.setPrefSize(control.getPrefWidth(), control.getPrefHeight());
@@ -107,6 +111,33 @@ public class RotarySkin extends SkinBase<Rotary> {
 		pane.onMousePressedProperty().set(this::mousePressed);
 		pane.onMouseReleasedProperty().set(this::mouseReleased);
 		pane.onMouseDraggedProperty().set(this::mouseDragged);
+		pane.onMouseClickedProperty().set(this::mouseClicked);
+		editor.onKeyReleasedProperty().set(this::editorKeyReleased);
+	}
+
+	private void editorKeyReleased(KeyEvent e) {
+		switch (e.getCode()) {
+		case ENTER:
+			// save value
+			pane.requestFocus();
+			break;
+		case ESCAPE:
+			// revert value
+			pane.requestFocus();
+			break;
+		default:
+			break;
+		}
+	}
+
+	private void mouseClicked(MouseEvent e) {
+		if (e.getButton().equals(MouseButton.PRIMARY)) {
+			if (e.getClickCount() == 2) {
+				if (inBounds(e, pane)) {
+					editor.requestFocus();
+				}
+			}
+		}
 	}
 
 	private void mousePressed(MouseEvent e) {
@@ -200,25 +231,28 @@ public class RotarySkin extends SkinBase<Rotary> {
 			pointer.setManaged(false);
 			pointer.setStrokeWidth(strokeWidth);
 
-			label.setManaged(true);
-			label.setTextAlignment(TextAlignment.CENTER);
-			label.setWrapText(false);
-			label.setMouseTransparent(false);
-			label.setFont(Font.font("Tahoma", FontWeight.NORMAL, FontPosture.REGULAR, radius * 0.4));
-			label.setAlignment(Pos.TOP_CENTER);
-			label.setPrefSize(radius * 2, radius * 0.5);
-			label.setMinWidth(Region.USE_PREF_SIZE);
-			label.setMaxWidth(Region.USE_PREF_SIZE);
-			label.setMinHeight(Region.USE_PREF_SIZE);
-			label.setMaxHeight(Region.USE_PREF_SIZE);
-			label.setTranslateY(radius * 2.2);
-			label.setVisible(true);
+			editor.setManaged(true);
+			editor.setMouseTransparent(false);
+			editor.setFont(Font.font("Tahoma", FontWeight.NORMAL, FontPosture.REGULAR, radius * 0.35));
+			editor.setAlignment(Pos.TOP_CENTER);
+			editor.setPrefSize(radius * 1.25, radius * 0.5);
+			editor.setMinWidth(Region.USE_PREF_SIZE);
+			editor.setMaxWidth(Region.USE_PREF_SIZE);
+			editor.setMinHeight(Region.USE_PREF_SIZE);
+			editor.setMaxHeight(Region.USE_PREF_SIZE);
+			editor.setPadding(Insets.EMPTY);
+			editor.setBackground(Background.EMPTY);
+			editor.setBorder(Border.EMPTY);
+			editor.setTranslateY(radius * 2.2);
+			editor.setVisible(true);
 
 			update();
 		}
 	}
 
 	private void update() {
+		pane.requestFocus();
+
 		double value = control.getPercentage();
 
 		double r = Math.toRadians(value * 300 + 120);
@@ -248,7 +282,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 		pointer.setStartY(arcBack.getCenterY());
 		pointer.setEndY(arcBack.getCenterY() + dy);
 
-		label.setText(control.getCurrentValueText());
+		editor.setText(control.getCurrentValueText());
 	}
 
 }

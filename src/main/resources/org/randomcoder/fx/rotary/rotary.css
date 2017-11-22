@@ -1,6 +1,7 @@
 .rotary {
 	-fx-background: darkgray;
-	-rc-font-color: black; -rc-arc-foreground-color : orange;
+	-rc-font-color: black;
+	-rc-arc-foreground-color: orange;
 	-rc-arc-background-color: black;
 	-rc-arc-foreground-color-none: gray;
 	-rc-arc-background-color-none: gray;
@@ -21,8 +22,21 @@
 	-fx-background-color: -fx-background;
 }
 
-.rotary-label {
+.rotary-editor {
+	-fx-background-color: -fx-background;
 	-fx-text-fill: -rc-font-color;
+	-fx-text-box-border: -fx-background;
+	-fx-faint-focus-color: -fx-background;
+	-fx-focus-color: -fx-background;
+	-fx-accent: -rc-arc-foreground-color;
+}
+
+.rotary-editor:focused {
+	-fx-background-color: -fx-background;
+	-fx-text-fill: -rc-font-color;
+	-fx-text-box-border: -fx-background;
+	-fx-faint-focus-color: -fx-background;
+	-fx-focus-color: -fx-background;
 }
 
 .rotary-arc {
