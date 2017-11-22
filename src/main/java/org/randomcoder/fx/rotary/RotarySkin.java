@@ -66,13 +66,13 @@ public class RotarySkin extends SkinBase<Rotary> {
 		if (unset(control.getMinWidth()) || unset(control.getMinHeight())) {
 			control.setMinSize(MINIMUM_WIDTH, MINIMUM_HEIGHT);
 		}
-		if (unset(control.getMaxWidth()) || unset(control.getMinHeight())) {
+		if (unset(control.getMaxWidth()) || unset(control.getMaxHeight())) {
 			control.setMaxSize(MAXIMUM_WIDTH, MAXIMUM_HEIGHT);
 		}
 	}
 
 	private void initGraphics() {
-		label = new Label("100");
+		label = new Label();
 		label.getStyleClass().addAll("rotary-label");
 
 		arcBack = new Arc();
