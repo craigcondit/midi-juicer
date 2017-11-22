@@ -42,6 +42,23 @@ public class PropUtils {
 	}
 
 	public static <T> ObjectProperty<T> objectProperty(
+			Object bean, String name, T initialValue) {
+
+		return new ObjectPropertyBase<T>(initialValue) {
+
+			@Override
+			public String getName() {
+				return name;
+			}
+
+			@Override
+			public Object getBean() {
+				return bean;
+			}
+		};
+	}
+
+	public static <T> ObjectProperty<T> objectProperty(
 			Object bean, String name, T initialValue, Consumer<T> invalidated) {
 
 		return new ObjectPropertyBase<T>(initialValue) {

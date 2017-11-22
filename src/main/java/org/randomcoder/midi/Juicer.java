@@ -1,6 +1,5 @@
 package org.randomcoder.midi;
 
-import org.randomcoder.fx.rotary.Polarity;
 import org.randomcoder.fx.rotary.Rotary;
 
 import javafx.application.Application;
@@ -22,19 +21,18 @@ public class Juicer extends Application {
 
 		GridPane pane = new GridPane();
 
-		int columns = 6;
+		int columns = 1;
 		int rows = 1;
 
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < columns; j++) {
-				Rotary rotary = new Rotary();
-				rotary.setPercentage(0.3 + 0.05 * (i * columns + j));
-				rotary.setPolarity(Polarity.values()[(i * columns + j) % 3]);
-				pane.add(rotary, j, i);
-			}
-		}
-		for (int i = 0; i < columns; i++) {
+		Rotary rotary = new Rotary();
+		rotary.setMinValue(0);
+		rotary.setMaxValue(16383);
+		rotary.setCurrentValue(8191);
+		rotary.setLabelMapper((c, v) -> String.format("%.1f%%", c.getPercentage() * 100));
 
+		pane.add(rotary, 0, 0);
+
+		for (int i = 0; i < columns; i++) {
 			ColumnConstraints cc = new ColumnConstraints();
 			cc.setHgrow(Priority.ALWAYS);
 			pane.getColumnConstraints().add(cc);

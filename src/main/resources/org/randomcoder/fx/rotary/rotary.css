@@ -1,11 +1,12 @@
 .rotary {
 	-fx-background: darkgray;
-	-rc-arc-foreground-color: orange;
+	-rc-font-color: black; -rc-arc-foreground-color : orange;
 	-rc-arc-background-color: black;
 	-rc-arc-foreground-color-none: gray;
 	-rc-arc-background-color-none: gray;
 	-rc-pointer-color: -rc-arc-background-color;
 	-rc-pointer-color-none: black;
+	-rc-arc-foreground-color: orange;
 }
 
 .rotary:pol-none {
@@ -16,8 +17,12 @@
 
 .rotary-container {
 	-fx-padding: 0;
-	-fx-alignment: center;
+	-fx-alignment: top-center;
 	-fx-background-color: -fx-background;
+}
+
+.rotary-label {
+	-fx-text-fill: -rc-font-color;
 }
 
 .rotary-arc {
