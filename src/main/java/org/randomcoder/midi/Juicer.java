@@ -28,7 +28,16 @@ public class Juicer extends Application {
 		rotary.setMinValue(0);
 		rotary.setMaxValue(16383);
 		rotary.setCurrentValue(8191);
-		rotary.setLabelMapper((c, v) -> String.format("%.1f%%", c.getPercentage() * 100));
+		rotary.setLabelValueGenerator(r -> String.format("%.1f%%", r.getPercentage() * 100));
+		rotary.setLabelValueHandler((r, s) -> {
+			StringBuilder buf = new StringBuilder();
+			for (char c : s.toCharArray()) {
+				if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
+					buf.append(c);
+				}
+			}
+			r.setPercentage(Double.parseDouble(buf.toString()) / 100);
+		});
 
 		pane.add(rotary, 0, 0);
 

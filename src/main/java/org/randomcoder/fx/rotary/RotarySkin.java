@@ -120,10 +120,12 @@ public class RotarySkin extends SkinBase<Rotary> {
 		case ENTER:
 			// save value
 			pane.requestFocus();
+			control.getLabelValueHandler().accept(control, editor.getText());
 			break;
 		case ESCAPE:
 			// revert value
 			pane.requestFocus();
+			editor.setText(control.getLabelValueGenerator().apply(control));
 			break;
 		default:
 			break;
@@ -282,7 +284,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 		pointer.setStartY(arcBack.getCenterY());
 		pointer.setEndY(arcBack.getCenterY() + dy);
 
-		editor.setText(control.getCurrentValueText());
+		editor.setText(control.getLabelValueGenerator().apply(control));
 	}
 
 }

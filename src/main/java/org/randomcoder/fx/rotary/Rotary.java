@@ -1,5 +1,8 @@
 package org.randomcoder.fx.rotary;
 
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
 import org.randomcoder.fx.util.PropUtils;
 
 import javafx.beans.property.DoubleProperty;
@@ -10,11 +13,6 @@ import javafx.scene.control.Skin;
 
 public class Rotary extends Control {
 
-	@FunctionalInterface
-	public interface LabelMapper {
-		public String map(Rotary rotary, double value);
-	}
-
 	public static final PseudoClass POL_NORMAL_PSEUDO_CLASS = PseudoClass.getPseudoClass("pol-normal");
 	public static final PseudoClass POL_REVERSED_PSEUDO_CLASS = PseudoClass.getPseudoClass("pol-reversed");
 	public static final PseudoClass POL_NONE_PSEUDO_CLASS = PseudoClass.getPseudoClass("pol-none");
@@ -23,7 +21,8 @@ public class Rotary extends Control {
 	private final DoubleProperty minValue;
 	private final DoubleProperty maxValue;
 	private final ObjectProperty<Polarity> polarity;
-	private final ObjectProperty<LabelMapper> labelMapper;
+	private final ObjectProperty<Function<Rotary, String>> labelValueGenerator;
+	private final ObjectProperty<BiConsumer<Rotary, String>> labelValueHandler;
 
 	public Rotary() {
 		getStyleClass().add("rotary");
@@ -32,7 +31,8 @@ public class Rotary extends Control {
 		minValue = createMinValue();
 		maxValue = createMaxValue();
 		polarity = createPolarity();
-		labelMapper = createLabelMapper();
+		labelValueGenerator = createLabelValueGenerator();
+		labelValueHandler = createLabelValueHandler();
 	}
 
 	private DoubleProperty createPercentage() {
@@ -55,8 +55,21 @@ public class Rotary extends Control {
 		});
 	}
 
-	private ObjectProperty<LabelMapper> createLabelMapper() {
-		return PropUtils.objectProperty(this, "labelMapper", (t, d) -> String.format("%d", (int) Math.round(d)));
+	private ObjectProperty<BiConsumer<Rotary, String>> createLabelValueHandler() {
+		return PropUtils.objectProperty(this, "labelValueHandler", (t, s) -> {
+			StringBuilder buf = new StringBuilder();
+			for (char c : s.toCharArray()) {
+				if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
+					buf.append(c);
+				}
+			}
+			t.setPercentage(Double.parseDouble(buf.toString()) / 100);
+		});
+	}
+
+	private ObjectProperty<Function<Rotary, String>> createLabelValueGenerator() {
+		return PropUtils.objectProperty(this, "labelValueGenerator",
+				t -> String.format("%d", (int) Math.round(t.getPercentage() * 100)));
 	}
 
 	@Override
@@ -76,16 +89,28 @@ public class Rotary extends Control {
 		return maxValue;
 	}
 
-	public ObjectProperty<LabelMapper> labelMapperProperty() {
-		return labelMapper;
+	public ObjectProperty<Function<Rotary, String>> labelValueGeneratorProperty() {
+		return labelValueGenerator;
 	}
 
-	public void setLabelMapper(LabelMapper labelMapper) {
-		labelMapperProperty().set(labelMapper);
+	public void setLabelValueGenerator(Function<Rotary, String> labelValueGenerator) {
+		labelValueGeneratorProperty().set(labelValueGenerator);
 	}
 
-	public LabelMapper getLabelMapper() {
-		return labelMapperProperty().get();
+	public Function<Rotary, String> getLabelValueGenerator() {
+		return labelValueGeneratorProperty().get();
+	}
+
+	public ObjectProperty<BiConsumer<Rotary, String>> labelValueHandlerProperty() {
+		return labelValueHandler;
+	}
+
+	public void setLabelValueHandler(BiConsumer<Rotary, String> labelValueHandler) {
+		labelValueHandlerProperty().set(labelValueHandler);
+	}
+
+	public BiConsumer<Rotary, String> getLabelValueHandler() {
+		return labelValueHandlerProperty().get();
 	}
 
 	protected double calculatePercentageFromCurrent(double currentValue) {
@@ -144,10 +169,6 @@ public class Rotary extends Control {
 
 	public double getCurrentValue() {
 		return calculateCurrentFromPercentage();
-	}
-
-	public String getCurrentValueText() {
-		return labelMapperProperty().get().map(this, getCurrentValue());
 	}
 
 	public void setCurrentValue(double currentValue) {
