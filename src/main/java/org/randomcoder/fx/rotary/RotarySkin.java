@@ -78,7 +78,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 	private void initGraphics() {
 		editor = new TextField();
 		editor.getStyleClass().addAll("rotary-editor");
-
+		editor.setFocusTraversable(false);
 		arcBack = new Arc();
 		arcBack.getStyleClass().addAll("rotary-arc", "rotary-arc-background");
 
@@ -102,9 +102,11 @@ public class RotarySkin extends SkinBase<Rotary> {
 		control.widthProperty().addListener(o -> resize());
 		control.heightProperty().addListener(o -> resize());
 		control.percentageProperty().addListener((o, ov, nv) -> update());
+		control.labelEditableProperty().addListener((o, ov, nv) -> labelEditablePropertyChanged(nv));
 		control.polarityProperty().addListener((o, ov, nv) -> update());
 		arcFore.centerXProperty().addListener((o, ov, nv) -> update());
 		arcFore.centerYProperty().addListener((o, ov, nv) -> update());
+		editor.focusedProperty().addListener((o, ov, nv) -> editorFocused(nv));
 	}
 
 	private void registerHandlers() {
@@ -113,6 +115,18 @@ public class RotarySkin extends SkinBase<Rotary> {
 		pane.onMouseDraggedProperty().set(this::mouseDragged);
 		pane.onMouseClickedProperty().set(this::mouseClicked);
 		editor.onKeyReleasedProperty().set(this::editorKeyReleased);
+	}
+
+	private void labelEditablePropertyChanged(boolean enabled) {
+		editor.setEditable(enabled);
+		editor.setDisable(enabled);
+	}
+
+	private void editorFocused(boolean hasFocus) {
+		if (hasFocus && !control.isLabelEditable()) {
+			pane.requestFocus();
+			editor.setText(control.getLabelValueGenerator().apply(control));
+		}
 	}
 
 	private void editorKeyReleased(KeyEvent e) {
@@ -133,18 +147,15 @@ public class RotarySkin extends SkinBase<Rotary> {
 	}
 
 	private void mouseClicked(MouseEvent e) {
-		if (e.getButton().equals(MouseButton.PRIMARY)) {
-			if (e.getClickCount() == 2) {
-				if (inBounds(e, pane)) {
-					editor.requestFocus();
-				}
-			}
+		if (e.getButton().equals(MouseButton.PRIMARY) &&
+				e.getClickCount() == 2 && inBounds(e, pane) && control.isLabelEditable()) {
+			editor.requestFocus();
 		}
 	}
 
 	private void mousePressed(MouseEvent e) {
 		// verify that we're pressed within the bounding box of the arc
-		if (inBounds(e, pane)) {
+		if (inBounds(e, pane) && control.isMouseEditable()) {
 			e.setDragDetect(true);
 			dragging.set(true);
 		}

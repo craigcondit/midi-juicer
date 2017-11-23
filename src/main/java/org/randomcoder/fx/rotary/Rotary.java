@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import org.randomcoder.fx.util.PropUtils;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.css.PseudoClass;
@@ -21,6 +22,9 @@ public class Rotary extends Control {
 	private final DoubleProperty minValue;
 	private final DoubleProperty maxValue;
 	private final ObjectProperty<Polarity> polarity;
+	private final BooleanProperty mouseEditable;
+	private final BooleanProperty labelEditable;
+	private final BooleanProperty automated;
 	private final ObjectProperty<Function<Rotary, String>> labelValueGenerator;
 	private final ObjectProperty<BiConsumer<Rotary, String>> labelValueHandler;
 
@@ -31,6 +35,9 @@ public class Rotary extends Control {
 		minValue = createMinValue();
 		maxValue = createMaxValue();
 		polarity = createPolarity();
+		mouseEditable = createMouseEditable();
+		labelEditable = createLabelEditable();
+		automated = createAutomated();
 		labelValueGenerator = createLabelValueGenerator();
 		labelValueHandler = createLabelValueHandler();
 	}
@@ -45,6 +52,18 @@ public class Rotary extends Control {
 
 	private DoubleProperty createMaxValue() {
 		return PropUtils.doubleProperty(this, "maxValue", 0d);
+	}
+
+	private BooleanProperty createMouseEditable() {
+		return PropUtils.booleanProperty(this, "mouseEditable", true);
+	}
+
+	private BooleanProperty createLabelEditable() {
+		return PropUtils.booleanProperty(this, "labelEditable", true);
+	}
+
+	private BooleanProperty createAutomated() {
+		return PropUtils.booleanProperty(this, "automated", false);
 	}
 
 	private ObjectProperty<Polarity> createPolarity() {
@@ -87,6 +106,42 @@ public class Rotary extends Control {
 
 	public DoubleProperty maxValueProperty() {
 		return maxValue;
+	}
+
+	public BooleanProperty labelEditableProperty() {
+		return labelEditable;
+	}
+
+	public BooleanProperty mouseEditableProperty() {
+		return mouseEditable;
+	}
+
+	public BooleanProperty automatedProperty() {
+		return automated;
+	}
+
+	public boolean isLabelEditable() {
+		return labelEditableProperty().get();
+	}
+
+	public void setLabelEditable(boolean labelEditable) {
+		this.labelEditable.set(labelEditable);
+	}
+
+	public boolean isMouseEditable() {
+		return mouseEditableProperty().get();
+	}
+
+	public void setMouseEditable(boolean mouseEditable) {
+		this.mouseEditable.set(mouseEditable);
+	}
+
+	public boolean isAutomated() {
+		return automatedProperty().get();
+	}
+
+	public void setAutomated(boolean automated) {
+		this.automated.set(automated);
 	}
 
 	public ObjectProperty<Function<Rotary, String>> labelValueGeneratorProperty() {

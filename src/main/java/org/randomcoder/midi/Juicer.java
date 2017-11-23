@@ -38,6 +38,7 @@ public class Juicer extends Application {
 			}
 			r.setPercentage(Double.parseDouble(buf.toString()) / 100);
 		});
+		rotary.setAutomated(true);
 
 		pane.add(rotary, 0, 0);
 
