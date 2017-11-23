@@ -21,26 +21,30 @@ public class Juicer extends Application {
 
 		GridPane pane = new GridPane();
 
-		int columns = 1;
-		int rows = 1;
+		int columns = 5;
+		int rows = 3;
 
-		Rotary rotary = new Rotary();
-		rotary.setMinValue(0);
-		rotary.setMaxValue(16383);
-		rotary.setCurrentValue(8191);
-		rotary.setLabelValueGenerator(r -> String.format("%.1f%%", r.getPercentage() * 100));
-		rotary.setLabelValueHandler((r, s) -> {
-			StringBuilder buf = new StringBuilder();
-			for (char c : s.toCharArray()) {
-				if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
-					buf.append(c);
-				}
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < columns; j++) {
+				Rotary rotary = new Rotary();
+				rotary.setMinValue(0);
+				rotary.setMaxValue(16383);
+				rotary.setCurrentValue(8191);
+				rotary.setLabelValueGenerator(r -> String.format("%.2f %%", r.getPercentage() * 100));
+				rotary.setLabelValueHandler((r, s) -> {
+					StringBuilder buf = new StringBuilder();
+					for (char c : s.toCharArray()) {
+						if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
+							buf.append(c);
+						}
+					}
+					r.setPercentage(Double.parseDouble(buf.toString()) / 100);
+				});
+				rotary.setAutomated(j % 2 == 0);
+
+				pane.add(rotary, j, i);
 			}
-			r.setPercentage(Double.parseDouble(buf.toString()) / 100);
-		});
-		rotary.setAutomated(true);
-
-		pane.add(rotary, 0, 0);
+		}
 
 		for (int i = 0; i < columns; i++) {
 			ColumnConstraints cc = new ColumnConstraints();
@@ -59,6 +63,7 @@ public class Juicer extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("Rotary control test");
 		primaryStage.show();
+
 	}
 
 }

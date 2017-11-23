@@ -8,6 +8,8 @@
 	-rc-pointer-color: -rc-arc-background-color;
 	-rc-pointer-color-none: black;
 	-rc-arc-foreground-color: orange;
+	-rc-arc-foreground-color: orange;
+	-rc-automated-color: -rc-arc-foreground-color;
 }
 
 .rotary:pol-none {
@@ -20,6 +22,11 @@
 	-fx-padding: 0;
 	-fx-alignment: top-center;
 	-fx-background-color: -fx-background;
+}
+
+.rotary-automation {
+	-fx-stroke-line-cap: round;
+	-fx-stroke: -rc-automated-color;
 }
 
 .rotary-editor {

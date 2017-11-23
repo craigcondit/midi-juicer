@@ -17,20 +17,20 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Polyline;
+import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 
 public class RotarySkin extends SkinBase<Rotary> {
 
-	private static final double H_W_RATIO = 0.9;
-
-	private static final double PREFERRED_HEIGHT = 200;
-	private static final double PREFERRED_WIDTH = PREFERRED_HEIGHT * H_W_RATIO;
-	private static final double MINIMUM_HEIGHT = 20;
-	private static final double MINIMUM_WIDTH = MINIMUM_HEIGHT * H_W_RATIO;
-	private static final double MAXIMUM_HEIGHT = 1024;
-	private static final double MAXIMUM_WIDTH = MAXIMUM_HEIGHT * H_W_RATIO;
+	private static final double PREFERRED_HEIGHT = 125;
+	private static final double PREFERRED_WIDTH = PREFERRED_HEIGHT;
+	private static final double MINIMUM_HEIGHT = 25;
+	private static final double MINIMUM_WIDTH = MINIMUM_HEIGHT;
+	private static final double MAXIMUM_HEIGHT = 5000;
+	private static final double MAXIMUM_WIDTH = MAXIMUM_HEIGHT;
 
 	private double size;
 	private double width;
@@ -40,6 +40,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 	private StackPane pane;
 	private Arc arcBack;
 	private Arc arcFore;
+	private Polyline automationTopLeft, automationTopRight, automationBottomLeft, automationBottomRight;
 	private Line pointer;
 	private TextField editor;
 
@@ -88,7 +89,21 @@ public class RotarySkin extends SkinBase<Rotary> {
 		pointer = new Line();
 		pointer.getStyleClass().addAll("rotary-pointer");
 
-		pane = new StackPane(arcBack, arcFore, pointer, editor);
+		automationTopLeft = new Polyline();
+		automationTopLeft.getStyleClass().addAll("rotary-automation");
+
+		automationTopRight = new Polyline();
+		automationTopRight.getStyleClass().addAll("rotary-automation");
+
+		automationBottomLeft = new Polyline();
+		automationBottomLeft.getStyleClass().addAll("rotary-automation");
+
+		automationBottomRight = new Polyline();
+		automationBottomRight.getStyleClass().addAll("rotary-automation");
+
+		pane = new StackPane(arcBack, arcFore, pointer, editor,
+				automationTopLeft, automationTopRight, automationBottomLeft, automationBottomRight);
+
 		pane.getStylesheets().addAll(control.getStylesheets());
 		pane.getStyleClass().addAll("rotary-container");
 		pane.setPrefSize(control.getPrefWidth(), control.getPrefHeight());
@@ -101,6 +116,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 	private void registerListeners() {
 		control.widthProperty().addListener(o -> resize());
 		control.heightProperty().addListener(o -> resize());
+		control.automatedProperty().addListener(o -> resize());
 		control.percentageProperty().addListener((o, ov, nv) -> update());
 		control.labelEditableProperty().addListener((o, ov, nv) -> labelEditablePropertyChanged(nv));
 		control.polarityProperty().addListener((o, ov, nv) -> update());
@@ -133,13 +149,14 @@ public class RotarySkin extends SkinBase<Rotary> {
 		switch (e.getCode()) {
 		case ENTER:
 			// save value
-			pane.requestFocus();
 			control.getLabelValueHandler().accept(control, editor.getText());
+			editor.setText(control.getLabelValueGenerator().apply(control));
+			pane.requestFocus();
 			break;
 		case ESCAPE:
 			// revert value
-			pane.requestFocus();
 			editor.setText(control.getLabelValueGenerator().apply(control));
+			pane.requestFocus();
 			break;
 		default:
 			break;
@@ -211,16 +228,17 @@ public class RotarySkin extends SkinBase<Rotary> {
 	private void resize() {
 		width = control.getWidth();
 		height = control.getHeight();
-		size = Math.min(width, H_W_RATIO * height);
 
 		if (width > 0 && height > 0) {
+			size = Math.min(width, height);
+
 			pane.relocate((width - size) * 0.5, (height - size) * 0.5);
 
-			double radius = size * 0.5;
-			double padding = radius * 0.10;
+			double radius = size * 0.4;
+			double padding = radius * 0.25;
 			radius -= padding;
 
-			double strokeWidth = radius * 0.10;
+			double strokeWidth = radius * 0.14;
 			radius -= strokeWidth;
 
 			arcBack.setManaged(false);
@@ -244,11 +262,40 @@ public class RotarySkin extends SkinBase<Rotary> {
 			pointer.setManaged(false);
 			pointer.setStrokeWidth(strokeWidth);
 
+			double frameX1 = arcBack.getCenterX() - radius * 1.25 - padding;
+			double frameY1 = arcBack.getCenterY() - radius * 0.9 - padding;
+			double frameX2 = arcBack.getCenterX() + radius + padding;
+			double frameY2 = arcBack.getCenterY() + radius * 1.35 + padding;
+
+			automationTopLeft.setManaged(false);
+			automationTopLeft.setStrokeWidth(strokeWidth * 0.5);
+			automationTopLeft.getPoints().setAll(radius * 0.25, 0d, 0d, 0d, 0d, radius * 0.25);
+			automationTopLeft.setStrokeLineCap(StrokeLineCap.BUTT);
+			automationTopLeft.relocate(frameX1, frameY1);
+
+			automationTopRight.setManaged(false);
+			automationTopRight.setStrokeWidth(strokeWidth * 0.5);
+			automationTopRight.getPoints().setAll(0d, radius * 0.25, 0d, 0d, radius * -0.25, 0d);
+			automationTopRight.setStrokeLineCap(StrokeLineCap.BUTT);
+			automationTopRight.relocate(frameX2, frameY1);
+
+			automationBottomLeft.setManaged(false);
+			automationBottomLeft.setStrokeWidth(strokeWidth * 0.5);
+			automationBottomLeft.setStrokeLineCap(StrokeLineCap.BUTT);
+			automationBottomLeft.getPoints().setAll(radius * 0.25, 0d, 0d, 0d, 0d, radius * -0.25);
+			automationBottomLeft.relocate(frameX1, frameY2);
+
+			automationBottomRight.setManaged(false);
+			automationBottomRight.setStrokeWidth(strokeWidth * 0.5);
+			automationBottomRight.setStrokeLineCap(StrokeLineCap.BUTT);
+			automationBottomRight.getPoints().setAll(radius * -0.25, 0d, 0d, 0d, 0d, radius * -0.25);
+			automationBottomRight.relocate(frameX2, frameY2);
+
 			editor.setManaged(true);
 			editor.setMouseTransparent(false);
-			editor.setFont(Font.font("Tahoma", FontWeight.NORMAL, FontPosture.REGULAR, radius * 0.35));
+			editor.setFont(Font.font("Tahoma", FontWeight.NORMAL, FontPosture.REGULAR, radius * 0.7));
 			editor.setAlignment(Pos.TOP_CENTER);
-			editor.setPrefSize(radius * 1.25, radius * 0.5);
+			editor.setPrefSize(size - padding * 2, radius * 0.9);
 			editor.setMinWidth(Region.USE_PREF_SIZE);
 			editor.setMaxWidth(Region.USE_PREF_SIZE);
 			editor.setMinHeight(Region.USE_PREF_SIZE);
@@ -256,7 +303,7 @@ public class RotarySkin extends SkinBase<Rotary> {
 			editor.setPadding(Insets.EMPTY);
 			editor.setBackground(Background.EMPTY);
 			editor.setBorder(Border.EMPTY);
-			editor.setTranslateY(radius * 2.2);
+			editor.setTranslateY(radius * 2.55);
 			editor.setVisible(true);
 
 			update();
@@ -294,6 +341,13 @@ public class RotarySkin extends SkinBase<Rotary> {
 		pointer.setEndX(arcBack.getCenterX() + dx);
 		pointer.setStartY(arcBack.getCenterY());
 		pointer.setEndY(arcBack.getCenterY() + dy);
+
+		boolean automation = control.isAutomated();
+
+		automationTopLeft.setVisible(automation);
+		automationTopRight.setVisible(automation);
+		automationBottomLeft.setVisible(automation);
+		automationBottomRight.setVisible(automation);
 
 		editor.setText(control.getLabelValueGenerator().apply(control));
 	}
