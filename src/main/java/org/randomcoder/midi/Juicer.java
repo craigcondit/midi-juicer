@@ -40,7 +40,7 @@ public class Juicer extends Application {
 					}
 					r.setPercentage(Double.parseDouble(buf.toString()) / 100);
 				});
-				rotary.setAutomated(j % 2 == 0);
+				rotary.setAutomated((i * columns + j) % 3 == 0);
 
 				pane.add(rotary, j, i);
 			}

@@ -25,7 +25,7 @@ import javafx.scene.text.FontWeight;
 
 public class RotarySkin extends SkinBase<Rotary> {
 
-	private static final double PREFERRED_HEIGHT = 125;
+	private static final double PREFERRED_HEIGHT = 60;
 	private static final double PREFERRED_WIDTH = PREFERRED_HEIGHT;
 	private static final double MINIMUM_HEIGHT = 25;
 	private static final double MINIMUM_WIDTH = MINIMUM_HEIGHT;
