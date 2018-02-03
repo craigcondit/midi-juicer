@@ -1,6 +1,6 @@
 package org.randomcoder.midi.experimental;
 
-import org.randomcoder.midi.coremidi.CoreMidi;
+import org.randomcoder.midi.mac.coremidi.CoreMidi;
 
 public class CreateClient {
 

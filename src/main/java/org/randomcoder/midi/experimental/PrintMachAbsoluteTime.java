@@ -1,8 +1,8 @@
 package org.randomcoder.midi.experimental;
 
-import org.randomcoder.midi.system.MachTimebaseInfo;
-import org.randomcoder.midi.system.SystemPeer;
-import org.randomcoder.midi.system.SystemServiceFactory;
+import org.randomcoder.midi.mac.system.MachTimebaseInfo;
+import org.randomcoder.midi.mac.system.SystemPeer;
+import org.randomcoder.midi.mac.system.SystemServiceFactory;
 
 public class PrintMachAbsoluteTime {
 
