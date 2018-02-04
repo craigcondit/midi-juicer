@@ -1,5 +1,7 @@
 package org.randomcoder.midi;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -9,6 +11,7 @@ import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
+import javax.sound.midi.SysexMessage;
 
 import org.randomcoder.midi.mac.MacMidi;
 
@@ -47,16 +50,26 @@ public class ApiProvider {
 		int maxNote = 72;
 		int delayMs = 500;
 
+		// send sysex
+		byte[] sysexData;
+		try (InputStream in = ApiProvider.class.getResourceAsStream("/dx7_patch.sysex")) {
+			try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+				in.transferTo(bos);
+				bos.flush();
+				sysexData = bos.toByteArray();
+			}
+		}
+		receiver.send(new SysexMessage(sysexData, sysexData.length), device.getMicrosecondPosition());
+
+		// sleep for 1 second
+		Thread.sleep(1000L);
+		
 		for (int i = minNote; i <= maxNote; i++) {
 			receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, i, 127), device.getMicrosecondPosition());
 			receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, i + 4, 127), device.getMicrosecondPosition());
 			receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, i + 7, 127), device.getMicrosecondPosition());
 
-			try {
-				Thread.sleep(delayMs);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			Thread.sleep(delayMs);
 
 			receiver.send(new ShortMessage(ShortMessage.NOTE_OFF, 0, i, 0), device.getMicrosecondPosition());
 			receiver.send(new ShortMessage(ShortMessage.NOTE_OFF, 0, i + 4, 0), device.getMicrosecondPosition());
