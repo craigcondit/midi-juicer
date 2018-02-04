@@ -25,4 +25,5 @@ public class MacMidi {
 	public static boolean isMacMidiDevice(MidiDevice device) {
 		return device instanceof AbstractMacMidiDevice;
 	}
+
 }

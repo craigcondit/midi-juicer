@@ -3,10 +3,14 @@ package org.randomcoder.midi.mac.coremidi;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+import javax.sound.midi.MidiMessage;
 
 import org.randomcoder.midi.mac.corefoundation.CFStringRef;
 import org.randomcoder.midi.mac.corefoundation.CoreFoundationPeer;
 import org.randomcoder.midi.mac.corefoundation.CoreFoundationServiceFactory;
+import org.randomcoder.midi.mac.spi.MacRunLoopThread;
 import org.randomcoder.midi.mac.system.SystemPeer;
 import org.randomcoder.midi.mac.system.SystemServiceFactory;
 
@@ -39,8 +43,105 @@ public class CoreMidi {
 		return CoreMidiServiceFactory.getPeer();
 	}
 
+	SystemPeer sp() {
+		return SystemServiceFactory.getPeer();
+	}
+
 	CoreMidiPropertyResolver resolver() {
 		return CoreMidiServiceFactory.getPropertyResolver();
+	}
+
+	public void closeOutputPort(int outputPortId) {
+		peer().MIDIPortDispose(outputPortId);
+	}
+
+	public void closeClient(int clientId) {
+		peer().MIDIClientDispose(clientId);
+	}
+
+	public int getDeviceRefByUniqueID(int uniqueId) {
+		IntByReference sourceRef = new IntByReference();
+		IntByReference sourceTypeRef = new IntByReference();
+		int result = peer().MIDIObjectFindByUniqueID(uniqueId, sourceRef, sourceTypeRef);
+
+		if (result != 0) {
+			throw new RuntimeException(String.format("Unable to find MIDI device (error %d)", result));
+		}
+		return sourceRef.getValue();
+	}
+
+	public int createOutputPort(String name, int clientId) {
+		CoreMidiPeer peer = peer();
+		CoreFoundationPeer cf = cf();
+
+		CFStringRef outputName = CFStringRef.createNative(name);
+		try {
+			IntByReference outputPortRef = new IntByReference();
+
+			int result = peer.MIDIOutputPortCreate(clientId, outputName, outputPortRef);
+			if (result != 0) {
+				throw new RuntimeException(String.format("Unable to create MIDI output port (error %d)", result));
+			}
+			return outputPortRef.getValue();
+		} finally {
+			cf.CFRelease(outputName.getPointer());
+		}
+	}
+
+	public int createClient(String name,
+			MacRunLoopThread runLoopThread,
+			Consumer<MIDINotification> midiNotificationHandler) {
+
+		CoreMidiPeer peer = peer();
+		CoreFoundationPeer cf = cf();
+
+		CFStringRef nameRef = CFStringRef.createNative(name);
+
+		try {
+			IntByReference clientPtr = new IntByReference();
+
+			MIDINotifyProc proc = (message, refCon) -> {
+				if (midiNotificationHandler != null) {
+					MIDINotification notify = MIDINotification.fromNative(message, 0);
+					midiNotificationHandler.accept(notify);
+				}
+			};
+
+			int result;
+			try {
+				result = runLoopThread.execute(() -> peer.MIDIClientCreate(nameRef, proc, null, clientPtr));
+			} catch (Exception e) {
+				throw new RuntimeException("Unable to create MIDI client", e);
+			}
+			if (result != 0) {
+				throw new RuntimeException(String.format("Unable to create MIDI client (error %d)", result));
+			}
+
+			return clientPtr.getValue();
+		} finally {
+			cf.CFRelease(nameRef.getPointer());
+		}
+	}
+
+	public MacRunLoopThread createRunLoopThread(String name) {
+		return new MacRunLoopThread(name, cf());
+	}
+
+	public void sendMidi(MidiMessage message, long timestamp, int outputPortId, int destinationId) {
+
+		CoreMidiPeer peer = peer();
+		SystemPeer sp = sp();
+
+		long ts = sp.mach_absolute_time();
+
+		MIDIPacketList pl = new MIDIPacketList();
+		pl.getPackets().add(new MIDIPacket(ts, message.getMessage()));
+		Pointer p = pl.write();
+		int result = peer.MIDISend(outputPortId, destinationId, p);
+
+		if (result != 0) {
+			throw new RuntimeException(String.format("Error during MIDISend (%d)", result));
+		}
 	}
 
 	public void createClient() {
@@ -385,6 +486,7 @@ public class CoreMidi {
 			CoreMidiPropertyResolver resolver,
 			int device,
 			CoreMidiProperty property) {
+
 		CFStringRef propRef = property.resolve(resolver);
 
 		Memory m = new Memory(4);

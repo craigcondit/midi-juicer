@@ -1,17 +1,16 @@
 package org.randomcoder.midi.mac.spi;
 
-import java.util.List;
-
 import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Receiver;
-import javax.sound.midi.Transmitter;
+
+import org.randomcoder.midi.mac.coremidi.CoreMidi;
 
 abstract public class AbstractMacMidiDevice implements MidiDevice {
 	private final MacMidiDeviceInfo info;
+	private final int deviceRef;
 
 	protected AbstractMacMidiDevice(MacMidiDeviceInfo info) {
 		this.info = info;
+		this.deviceRef = CoreMidi.getInstance().getDeviceRefByUniqueID(info.getUniqueId());
 	}
 
 	@Override
@@ -20,49 +19,11 @@ abstract public class AbstractMacMidiDevice implements MidiDevice {
 	}
 
 	@Override
-	public boolean isOpen() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void open() throws MidiUnavailableException {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void close() {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
 	public long getMicrosecondPosition() {
-		// TODO Auto-generated method stub
-		return 0;
+		return -1L;
 	}
 
-	@Override
-	public Receiver getReceiver() throws MidiUnavailableException {
-		// TODO Auto-generated method stub
-		return null;
+	public int getDeviceRef() {
+		return deviceRef;
 	}
-
-	@Override
-	public List<Receiver> getReceivers() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Transmitter getTransmitter() throws MidiUnavailableException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<Transmitter> getTransmitters() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

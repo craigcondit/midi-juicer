@@ -5,11 +5,11 @@ import javax.sound.midi.MidiDevice;
 public class MacMidiDeviceInfo extends MidiDevice.Info {
 
 	private final MacMidiDeviceType type;
-	private final Integer uniqueId;
+	private final int uniqueId;
 	private final Integer deviceId;
 
 	protected MacMidiDeviceInfo(String name, String vendor, String description, String version,
-			MacMidiDeviceType type, Integer uniqueId, Integer deviceId) {
+			MacMidiDeviceType type, int uniqueId, Integer deviceId) {
 		super(name, vendor, description, version);
 		this.type = type;
 		this.uniqueId = uniqueId;
@@ -20,7 +20,7 @@ public class MacMidiDeviceInfo extends MidiDevice.Info {
 		return type;
 	}
 
-	public Integer getUniqueId() {
+	public int getUniqueId() {
 		return uniqueId;
 	}
 

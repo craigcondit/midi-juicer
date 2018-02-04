@@ -54,6 +54,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jna.version>4.5.0</jna.version>
 		<rxjava.version>2.1.6</rxjava.version>
+		<jool.version>0.9.12</jool.version>
 		<junit.version>4.12</junit.version>
 		<jline.version>3.5.1</jline.version>
 		<mockito.version>2.12.0</mockito.version>
@@ -78,6 +79,11 @@
 			<groupId>io.reactivex.rxjava2</groupId>
 			<artifactId>rxjava</artifactId>
 			<version>${rxjava.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jooq</groupId>
+			<artifactId>jool</artifactId>
+			<version>${jool.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jline</groupId>
