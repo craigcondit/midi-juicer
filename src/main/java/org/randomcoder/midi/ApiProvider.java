@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
@@ -46,15 +45,12 @@ public class ApiProvider {
 
 		int minNote = 60;
 		int maxNote = 72;
-		int delayMs = 250;
+		int delayMs = 500;
 
 		for (int i = minNote; i <= maxNote; i++) {
-			// send note off for previous note / note on for current one
-			MidiMessage noteOff = new ShortMessage(ShortMessage.NOTE_OFF, 0, Math.max(0, i - 1), 0);
-			receiver.send(noteOff, device.getMicrosecondPosition());
-
-			MidiMessage noteOn = new ShortMessage(ShortMessage.NOTE_ON, 0, i, 127);
-			receiver.send(noteOn, device.getMicrosecondPosition());
+			receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, i, 127), device.getMicrosecondPosition());
+			receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, i + 4, 127), device.getMicrosecondPosition());
+			receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, i + 7, 127), device.getMicrosecondPosition());
 
 			try {
 				Thread.sleep(delayMs);
@@ -62,10 +58,9 @@ public class ApiProvider {
 				e.printStackTrace();
 			}
 
-			if (i == maxNote) {
-				MidiMessage noteOff2 = new ShortMessage(ShortMessage.NOTE_OFF, 0, i, 0);
-				receiver.send(noteOff2, device.getMicrosecondPosition());
-			}
+			receiver.send(new ShortMessage(ShortMessage.NOTE_OFF, 0, i, 0), device.getMicrosecondPosition());
+			receiver.send(new ShortMessage(ShortMessage.NOTE_OFF, 0, i + 4, 0), device.getMicrosecondPosition());
+			receiver.send(new ShortMessage(ShortMessage.NOTE_OFF, 0, i + 7, 0), device.getMicrosecondPosition());
 		}
 
 		receiver.close();
