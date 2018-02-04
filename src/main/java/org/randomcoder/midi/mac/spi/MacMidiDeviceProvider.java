@@ -64,7 +64,6 @@ public class MacMidiDeviceProvider extends MidiDeviceProvider {
 		List<MidiDevice.Info> devices = new ArrayList<>();
 
 		int sourceCount = midi.getNumberOfSources();
-		System.out.printf("Source count: %d%n", sourceCount);
 
 		for (int i = 0; i < sourceCount; i++) {
 			int handle = midi.getSource(i);
@@ -75,7 +74,6 @@ public class MacMidiDeviceProvider extends MidiDeviceProvider {
 		}
 
 		int destCount = midi.getNumberOfDestinations();
-		System.out.printf("Destination count: %d%n", destCount);
 
 		for (int i = 0; i < destCount; i++) {
 			int handle = midi.getDestination(i);
