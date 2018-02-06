@@ -18,6 +18,14 @@ public class MacMidi {
 		return true;
 	}
 
+	public static void init() {
+
+	}
+
+	public static void shutdown() {
+
+	}
+
 	public static boolean isMacMidiDevice(MidiDevice.Info info) {
 		return info instanceof MacMidiDeviceInfo;
 	}

@@ -14,10 +14,19 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.SysexMessage;
 
 import org.randomcoder.midi.mac.MacMidi;
+import org.randomcoder.midi.mac.coremidi.CoreMidi;
+import org.randomcoder.midi.mac.spi.MacRunLoopThread;
 
 public class ApiProvider {
 
 	public static void main(String[] args) throws Exception {
+
+		// wait for device to be present
+		MacRunLoopThread rlt = CoreMidi.getInstance().createRunLoopThread("test");
+		rlt.start();
+		CoreMidi.getInstance().createClient("client", rlt, e -> {
+			System.out.println(e);
+		});
 
 		List<MidiDevice.Info> deviceInfos = Arrays.stream(MidiSystem.getMidiDeviceInfo())
 				.filter(MacMidi::isMacMidiDevice)
@@ -63,7 +72,7 @@ public class ApiProvider {
 
 		// sleep for 1 second
 		Thread.sleep(1000L);
-		
+
 		for (int i = minNote; i <= maxNote; i++) {
 			receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, i, 127), device.getMicrosecondPosition());
 			receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, i + 4, 127), device.getMicrosecondPosition());
