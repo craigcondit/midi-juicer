@@ -105,18 +105,16 @@ public class CoreMidi {
 		try {
 			IntByReference clientPtr = new IntByReference();
 
-			MIDINotifyProc proc = (message, refCon) -> {
-				if (midiNotificationHandler != null) {
-					MIDINotification notify = MIDINotification.fromNative(message, 0);
-					midiNotificationHandler.accept(notify);
-				}
-			};
-
 			int result;
 			try {
-				if (runLoopThread == null) {
+				if (runLoopThread == null || midiNotificationHandler == null) {
 					result = peer.MIDIClientCreate(nameRef, null, null, clientPtr);
 				} else {
+					MIDINotifyProc proc = (message, refCon) -> {
+						MIDINotification notify = MIDINotification.fromNative(message, 0);
+						midiNotificationHandler.accept(notify);
+					};
+
 					result = runLoopThread.execute(() -> peer.MIDIClientCreate(nameRef, proc, null, clientPtr));
 				}
 			} catch (Exception e) {

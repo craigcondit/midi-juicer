@@ -5,14 +5,12 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
 
 import org.randomcoder.midi.mac.coremidi.CoreMidi;
-import org.randomcoder.midi.mac.coremidi.MIDINotification;
 
 public class MacMidiDestinationReceiver implements MidiDeviceReceiver {
 	private final int id;
 	private final MacMidiDestination destination;
 	private final CoreMidi midi;
 
-	private volatile MacRunLoopThread runLoopThread;
 	private volatile Integer clientId;
 	private volatile Integer outputPortId;
 	private volatile boolean open = false;
@@ -28,17 +26,10 @@ public class MacMidiDestinationReceiver implements MidiDeviceReceiver {
 		return destination;
 	}
 
-	private void handleMidiNotification(MIDINotification event) {
-		System.out.println(event);
-	}
-
 	synchronized void open() throws MidiUnavailableException {
 		if (open) {
 			return;
 		}
-
-		String rlName = String.format("runloop-receiver-%d-%d",
-				destination.getDeviceInfo().getUniqueId(), id);
 
 		String clientName = String.format("receiver-%d-%d",
 				destination.getDeviceInfo().getUniqueId(), id);
@@ -47,10 +38,8 @@ public class MacMidiDestinationReceiver implements MidiDeviceReceiver {
 				destination.getDeviceInfo().getUniqueId(), id);
 
 		destination.open();
-		runLoopThread = midi.createRunLoopThread(rlName);
-		runLoopThread.start();
 
-		clientId = midi.createClient(clientName, runLoopThread, this::handleMidiNotification);
+		clientId = midi.createClient(clientName);
 		outputPortId = midi.createOutputPort(outputPortName, clientId);
 
 		open = true;
@@ -66,14 +55,6 @@ public class MacMidiDestinationReceiver implements MidiDeviceReceiver {
 		if (clientId != null) {
 			midi.closeClient(clientId);
 			clientId = null;
-		}
-
-		if (runLoopThread != null) {
-			try {
-				runLoopThread.close();
-			} catch (InterruptedException ignored) {
-			}
-			runLoopThread = null;
 		}
 
 		open = false;

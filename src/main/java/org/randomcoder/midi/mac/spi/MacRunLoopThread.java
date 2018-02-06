@@ -42,7 +42,7 @@ public class MacRunLoopThread extends Thread implements AutoCloseable {
 			while (!shutdown) {
 				try {
 					synchronized (this) {
-						this.wait(10L);
+						this.wait(100L);
 					}
 					Task<?> task = null;
 					while ((task = takeTask()) != null) {
