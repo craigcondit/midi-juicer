@@ -323,7 +323,8 @@ public class AbletonPush2 implements Closeable {
 		public void start(Stage stage) throws Exception {
 			WebView webview = new WebView();
 			webview.getEngine().load(
-					"http://www.youtube.com/embed/SPqlnSVDpXQ?autoplay=1");
+					"https://player.vimeo.com/video/48070605?autoplay=1");
+//					"http://www.youtube.com/embed/SPqlnSVDpXQ?autoplay=1");
 			webview.setPrefSize(COLS, ROWS);
 
 			stage.setScene(new Scene(webview));
