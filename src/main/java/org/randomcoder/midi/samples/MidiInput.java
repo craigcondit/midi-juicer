@@ -9,6 +9,7 @@ import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Transmitter;
 
+import org.randomcoder.midi.MidiHandler;
 import org.randomcoder.midi.mac.MacMidi;
 
 public class MidiInput {
@@ -17,6 +18,10 @@ public class MidiInput {
 
 		if (MacMidi.isAvailable()) {
 			MacMidi.init();
+
+			MacMidi.addSetupChangedListener(e -> {
+				System.out.println(e);
+			});
 		}
 
 		try {
@@ -46,10 +51,13 @@ public class MidiInput {
 
 			try (MidiDevice device = devices.get(0); Transmitter transmitter = device.getTransmitter()) {
 				System.out.printf("Opened transmitter for device: %s%n", device);
-				// TODO do something useful
-			}
 
-			Thread.sleep(60_000L);
+				transmitter.setReceiver(MidiHandler.toReceiver((m, t) -> {
+					System.out.println(m);
+				}));
+
+				Thread.sleep(60_000L);
+			}
 
 		} finally {
 			MacMidi.shutdown();

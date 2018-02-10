@@ -12,13 +12,11 @@ import org.randomcoder.midi.mac.coremidi.CoreMidi;
 import org.randomcoder.midi.mac.coremidi.MIDINotification;
 import org.randomcoder.midi.mac.spi.AbstractMacMidiDevice;
 import org.randomcoder.midi.mac.spi.MacMidiDeviceInfo;
-import org.randomcoder.midi.mac.spi.MacRunLoopThread;
 
 public class MacMidi {
 	private static final Object lock = new Object();
 
 	private static volatile boolean init = false;
-	private static volatile MacRunLoopThread runLoop;
 	private static volatile Integer clientId;
 	private static final Set<Consumer<MIDINotification.SetupChanged>> setupChangedListeners = new LinkedHashSet<>();
 	private static final Set<Consumer<MIDINotification.IOError>> ioErrorListeners = new LinkedHashSet<>();
@@ -116,11 +114,8 @@ public class MacMidi {
 				return;
 			}
 
-			runLoop = CoreMidi.getInstance().createRunLoopThread("MacMidi-default-runloop");
-			runLoop.start();
-
-			clientId = CoreMidi.getInstance().createClient(
-					"MacMidi-default-client", runLoop, MacMidi::onMidiEvent);
+			clientId = CoreMidi.getInstance()
+					.createClient("MacMidi-default-client", MacMidi::onMidiEvent);
 
 			setupChangedListeners.clear();
 			ioErrorListeners.clear();
@@ -136,14 +131,6 @@ public class MacMidi {
 			if (clientId != null) {
 				CoreMidi.getInstance().closeClient(clientId);
 				clientId = null;
-			}
-			if (runLoop != null) {
-				try {
-					runLoop.close();
-				} catch (InterruptedException e) {
-
-				}
-				runLoop = null;
 			}
 			init = false;
 		}

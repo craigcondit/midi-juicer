@@ -1,13 +1,23 @@
 package org.randomcoder.midi.mac.spi;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
 
 public class MacMidiSource extends AbstractMacMidiDevice {
+
+	private final AtomicInteger transmitterIdGenerator = new AtomicInteger(0);
+
+	private final List<Transmitter> transmitters = new CopyOnWriteArrayList<>();
+
+	private boolean open = false;
 
 	public MacMidiSource(MacMidiDeviceInfo info) {
 		super(info);
@@ -35,20 +45,22 @@ public class MacMidiSource extends AbstractMacMidiDevice {
 
 	@Override
 	public Transmitter getTransmitter() throws MidiUnavailableException {
-		// TODO Auto-generated method stub
-		return null;
+		MacMidiSourceTransmitter transmitter = new MacMidiSourceTransmitter(this,
+				transmitterIdGenerator.incrementAndGet());
+
+		transmitters.add(transmitter);
+		transmitter.open();
+		return transmitter;
 	}
 
 	@Override
 	public List<Transmitter> getTransmitters() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.unmodifiableList(new ArrayList<>(transmitters));
 	}
 
 	@Override
 	public boolean isOpen() {
-		// TODO handle this
-		return false;
+		return open;
 	}
 
 	@Override
@@ -57,7 +69,7 @@ public class MacMidiSource extends AbstractMacMidiDevice {
 			return;
 		}
 
-		// TODO Auto-generated method stub
+		open = true;
 	}
 
 	@Override
@@ -66,7 +78,12 @@ public class MacMidiSource extends AbstractMacMidiDevice {
 			return;
 		}
 
-		// TODO Auto-generated method stub
+		for (ListIterator<Transmitter> it = transmitters.listIterator(); it.hasPrevious();) {
+			Transmitter transmitter = it.previous();
+			transmitter.close();
+			it.remove();
+		}
+		open = false;
 	}
 
 }

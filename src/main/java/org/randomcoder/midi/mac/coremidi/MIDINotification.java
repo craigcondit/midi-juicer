@@ -14,6 +14,7 @@ abstract public class MIDINotification {
 	}
 
 	public static MIDINotification fromNative(Pointer p, int offset) {
+		System.out.print("MIDI notification");
 		MIDINotificationMessageID type = MIDINotificationMessageID.byValue(p.getInt(offset));
 		offset += 4;
 		int size = p.getInt(offset) - 8;
