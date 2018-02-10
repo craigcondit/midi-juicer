@@ -45,6 +45,7 @@ public class MidiInput {
 			}
 
 			try (MidiDevice device = devices.get(0); Transmitter transmitter = device.getTransmitter()) {
+				System.out.printf("Opened transmitter for device: %s%n", device);
 				// TODO do something useful
 			}
 

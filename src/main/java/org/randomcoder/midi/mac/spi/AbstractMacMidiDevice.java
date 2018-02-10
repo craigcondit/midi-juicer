@@ -26,4 +26,15 @@ abstract public class AbstractMacMidiDevice implements MidiDevice {
 	public int getDeviceRef() {
 		return deviceRef;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s[name=%s, vendor=%s, description=%s, version=%s, type=%s]",
+				getClass().getSimpleName(),
+				info.getName(),
+				info.getVendor(),
+				info.getDescription(),
+				info.getVersion(),
+				info.getType());
+	}
 }
