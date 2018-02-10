@@ -1,4 +1,4 @@
-package org.randomcoder.midi;
+package org.randomcoder.midi.samples;
 
 import java.io.Closeable;
 import java.io.IOException;

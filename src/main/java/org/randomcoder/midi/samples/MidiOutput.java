@@ -1,4 +1,4 @@
-package org.randomcoder.midi;
+package org.randomcoder.midi.samples;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -15,19 +15,13 @@ import javax.sound.midi.SysexMessage;
 
 import org.randomcoder.midi.mac.MacMidi;
 
-public class ApiProvider {
+public class MidiOutput {
 
 	public static void main(String[] args) throws Exception {
 
 		if (MacMidi.isAvailable()) {
 			MacMidi.init();
-
-			MacMidi.addSetupChangedListener(e -> {
-				System.out.println(e);
-			});
 		}
-
-		Thread.sleep(60000L);
 
 		try {
 
@@ -61,7 +55,7 @@ public class ApiProvider {
 
 				// send sysex
 				byte[] sysexData;
-				try (InputStream in = ApiProvider.class.getResourceAsStream("/dx7_patch.sysex")) {
+				try (InputStream in = MidiOutput.class.getResourceAsStream("/dx7_patch.sysex")) {
 					try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 						in.transferTo(bos);
 						bos.flush();
