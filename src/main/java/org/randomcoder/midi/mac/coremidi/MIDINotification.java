@@ -1,5 +1,7 @@
 package org.randomcoder.midi.mac.coremidi;
 
+import org.randomcoder.midi.mac.MacMidi;
+
 import com.sun.jna.Pointer;
 
 abstract public class MIDINotification {
@@ -14,7 +16,8 @@ abstract public class MIDINotification {
 	}
 
 	public static MIDINotification fromNative(Pointer p, int offset) {
-		System.out.print("MIDI notification");
+		MacMidi.debug("MIDI notification received");
+		
 		MIDINotificationMessageID type = MIDINotificationMessageID.byValue(p.getInt(offset));
 		offset += 4;
 		int size = p.getInt(offset) - 8;

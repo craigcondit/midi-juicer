@@ -2,10 +2,14 @@ package org.randomcoder.midi.mac.spi;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiDeviceTransmitter;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
 
+import org.randomcoder.midi.mac.MacMidi;
 import org.randomcoder.midi.mac.coremidi.CoreMidi;
 import org.randomcoder.midi.mac.coremidi.MIDIPacket;
 import org.randomcoder.midi.mac.coremidi.MIDIPacketList;
@@ -35,16 +39,16 @@ public class MacMidiSourceTransmitter implements MidiDeviceTransmitter {
 			return;
 		}
 
-		String clientName = String.format("receiver-%d-%d",
+		String clientName = String.format("transmitter:%d:%d",
 				source.getDeviceInfo().getUniqueId(), id);
 
-		String outputPortName = String.format("output-%d-%d",
+		String inputPortName = String.format("input:%d:%d",
 				source.getDeviceInfo().getUniqueId(), id);
 
 		source.open();
 
 		clientId = midi.createClient(clientName);
-		inputPortId = midi.createInputPort(outputPortName, clientId, this::handleMidi);
+		inputPortId = midi.createInputPort(inputPortName, clientId, this::handleMidi);
 		connRef = midi.connectSource(inputPortId, source.getDeviceRef());
 
 		open = true;
@@ -58,25 +62,57 @@ public class MacMidiSourceTransmitter implements MidiDeviceTransmitter {
 			return;
 		}
 
-		System.out.printf("MIDIReadProc pktlist: %s srcConnRefCon: %s%n", pktlist, srcConnRefCon);
+		MacMidi.debug("MIDIReadProc pktlist: %s srcConnRefCon: %s", pktlist, srcConnRefCon);
 
 		// go through packets
 		MIDIPacketList pList = new MIDIPacketList(pktlist, 0);
-		System.out.printf("Packet list: %s%n", pList);
+		MacMidi.debug("Packet list: %s", pList);
 
+		StringBuilder buf = new StringBuilder();
+		for (int i = 0; i < pList.getLength(); i++) {
+
+			MIDIPacket packet = pList.getPackets().get(i);
+			MacMidi.debug("Packet: %s", packet);
+
+			buf.setLength(0);
+			for (short j = 0; j < packet.getLength(); j++) {
+				buf.append(String.format("  %02x", packet.getData()[j]));
+			}
+			MacMidi.debug("  data (hex): %s", buf.toString());
+
+			buf.setLength(0);
+			for (short j = 0; j < packet.getLength(); j++) {
+				buf.append(String.format(" %3d", packet.getData()[j] & 0xff));
+			}
+			MacMidi.debug("  data (dec): %s", buf.toString());
+		}
+
+		// convert to Java MidiMessage
 		for (int i = 0; i < pList.getLength(); i++) {
 			MIDIPacket packet = pList.getPackets().get(i);
-			System.out.printf("Packet: %s%n", packet);
-			System.out.print("  data (hex):");
-			for (short j = 0; j < packet.getLength(); j++) {
-				System.out.printf("  %02x", packet.getData()[j]);
+			MidiMessage message = null;
+			try {
+				if (packet.getLength() == 1) {
+					message = new ShortMessage(
+							packet.getData()[0] & 0xff);
+				} else if (packet.getLength() == 2) {
+					message = new ShortMessage(
+							packet.getData()[0] & 0xff,
+							packet.getData()[1] & 0xff,
+							0);
+				} else if (packet.getLength() == 3) {
+					message = new ShortMessage(
+							packet.getData()[0] & 0xff,
+							packet.getData()[1] & 0xff,
+							packet.getData()[2] & 0xff);
+				}
+
+				receiver.send(message, -1L);
+
+			} catch (InvalidMidiDataException e) {
+				e.printStackTrace();
+				continue;
 			}
-			System.out.println();
-			System.out.print("  data (dec):");
-			for (int j = 0; j < packet.getLength(); j++) {
-				System.out.printf(" %3d", packet.getData()[j] & 0xff);
-			}
-			System.out.println();
 		}
 	}
 

@@ -6,9 +6,14 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import org.randomcoder.midi.mac.coremidi.CoreMidiServiceFactory;
+
 import com.sun.jna.Pointer;
 
 public class CFRunLoopThread extends Thread implements AutoCloseable {
+
+	private static final String KCF_RUN_LOOP_COMMON_MODES = "kCFRunLoopCommonModes";
+	private static final String KCF_RUN_LOOP_DEFAULT_MODE = "kCFRunLoopDefaultMode";
 
 	private final BlockingDeque<Runnable> deque = new LinkedBlockingDeque<Runnable>();
 
@@ -24,12 +29,41 @@ public class CFRunLoopThread extends Thread implements AutoCloseable {
 		this.exceptionHandler = exceptionHandler;
 	}
 
+	private CFStringRef resolve(String prop) {
+		return new CFStringRef(CoreMidiServiceFactory.getNativeLibrary()
+				.getGlobalVariableAddress(prop).getPointer(0));
+	}
+
 	@Override
 	public void run() {
 		final Pointer currentRunLoop = cf.CFRunLoopGetCurrent();
-		cf.CFRunLoopRun();
+
+		System.out.println("Creating context");
+		CFRunLoopSourceContext context = new CFRunLoopSourceContext(currentRunLoop, c -> {
+			System.out.println("CFRunLoopSource called");
+		});
+
+		System.out.println("Retaining current run loop");
 		cf.CFRetain(currentRunLoop);
 
+		System.out.println("Resolving property");
+		CFStringRef commonModes = resolve(KCF_RUN_LOOP_COMMON_MODES);
+		CFStringRef defaultMode = resolve(KCF_RUN_LOOP_DEFAULT_MODE);
+
+		System.out.println("Creating source");
+		final Pointer source = cf.CFRunLoopSourceCreate(null, 0, context);
+		System.out.println("Adding source");
+		cf.CFRunLoopAddSource(currentRunLoop, source, commonModes);
+		System.out.println("Signalling source");
+		cf.CFRunLoopSourceSignal(source);
+
+		System.out.println("Running run loop");
+		cf.CFRunLoopRunInMode(defaultMode, 0.10d, false);
+
+		System.out.println("Removing source");
+		cf.CFRunLoopRemoveSource(currentRunLoop, source, commonModes);
+
+		System.out.println("Init complete");
 		init.countDown();
 
 		try {
@@ -48,8 +82,7 @@ public class CFRunLoopThread extends Thread implements AutoCloseable {
 						}
 					}
 				}
-				cf.CFRunLoopRun();
-				Thread.sleep(10L); // TODO figure out if there's a better way
+				cf.CFRunLoopRunInMode(defaultMode, 0.10d, false);
 			}
 		} catch (InterruptedException e) {
 			return;

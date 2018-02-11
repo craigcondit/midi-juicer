@@ -36,6 +36,6 @@ public class CoreMidiException extends RuntimeException {
 		return Optional.of(CoreMidiError.byErrorCode(errorCode))
 				.filter(e -> e != CoreMidiError.kUnknownError)
 				.map(e -> new CoreMidiException(e.description(), errorCode))
-				.orElseGet(() -> new CoreMidiException("Unknown error", errorCode));
+				.orElseGet(() -> new CoreMidiException("Unknown error (" + errorCode + ")", errorCode));
 	}
 }

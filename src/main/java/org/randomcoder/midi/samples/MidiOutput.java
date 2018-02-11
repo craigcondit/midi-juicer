@@ -21,6 +21,7 @@ public class MidiOutput {
 
 		if (MacMidi.isAvailable()) {
 			MacMidi.init();
+			MacMidi.setDebug(true);
 		}
 
 		try {

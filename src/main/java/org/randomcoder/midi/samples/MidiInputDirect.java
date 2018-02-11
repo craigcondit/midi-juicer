@@ -6,13 +6,14 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Transmitter;
+import javax.sound.midi.spi.MidiDeviceProvider;
 
 import org.randomcoder.midi.MidiHandler;
 import org.randomcoder.midi.mac.MacMidi;
+import org.randomcoder.midi.mac.spi.MacMidiDeviceProvider;
 
-public class MidiInput {
+public class MidiInputDirect {
 
 	public static void main(String[] args) throws Exception {
 		if (MacMidi.isAvailable()) {
@@ -27,7 +28,9 @@ public class MidiInput {
 		System.out.println("MIDI initialized");
 
 		try {
-			List<MidiDevice.Info> deviceInfos = Arrays.stream(MidiSystem.getMidiDeviceInfo())
+			MidiDeviceProvider p = MacMidiDeviceProvider.getInstance();
+
+			List<MidiDevice.Info> deviceInfos = Arrays.stream(p.getDeviceInfo())
 					.filter(MacMidi::isMacMidiDevice)
 					.filter(di -> "MIDI1".equals(di.getName()))
 					.filter(di -> "Nektar".equals(di.getVendor()))
@@ -37,7 +40,7 @@ public class MidiInput {
 			List<MidiDevice> devices = deviceInfos.stream()
 					.map(di -> {
 						try {
-							return MidiSystem.getMidiDevice(di);
+							return p.getDevice(di);
 						} catch (Exception e) {
 							return null;
 						}

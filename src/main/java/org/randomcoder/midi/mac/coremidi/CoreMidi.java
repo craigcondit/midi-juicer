@@ -4,15 +4,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import javax.sound.midi.MidiMessage;
 
-import org.randomcoder.midi.mac.corefoundation.CFRunLoop;
 import org.randomcoder.midi.mac.corefoundation.CFStringRef;
 import org.randomcoder.midi.mac.corefoundation.CoreFoundationPeer;
 import org.randomcoder.midi.mac.corefoundation.CoreFoundationServiceFactory;
+import org.randomcoder.midi.mac.dispatch.Dispatch;
 import org.randomcoder.midi.mac.system.SystemPeer;
 import org.randomcoder.midi.mac.system.SystemServiceFactory;
 
@@ -77,7 +75,7 @@ public class CoreMidi {
 		int result = peer().MIDIObjectFindByUniqueID(uniqueId, sourceRef, sourceTypeRef);
 
 		if (result != 0) {
-			throw new RuntimeException(String.format("Unable to find MIDI device (error %d)", result));
+			throw CoreMidiException.fromError(result);
 		}
 		return sourceRef.getValue();
 	}
@@ -90,17 +88,12 @@ public class CoreMidi {
 		try {
 			IntByReference outputPortRef = new IntByReference();
 
-			final AtomicInteger result = new AtomicInteger();
-			try {
-				CFRunLoop.invokeAndWait(() -> {
-					result.set(peer.MIDIOutputPortCreate(clientId, outputName, outputPortRef));
-				});
-			} catch (InterruptedException e) {
-				throw new IllegalStateException("CFRunLoop shutting down");
-			}
+			AtomicInteger result = new AtomicInteger();
+			Dispatch.getInstance().runOnMainThread(null, c -> {
+				result.set(peer.MIDIOutputPortCreate(clientId, outputName, outputPortRef));
+			});
 			if (result.get() != 0) {
-				throw new RuntimeException(String.format("Unable to create MIDI output port (error %d)",
-						result.get()));
+				throw CoreMidiException.fromError(result.get());
 			}
 			return outputPortRef.getValue();
 		} finally {
@@ -118,18 +111,12 @@ public class CoreMidi {
 		try {
 			IntByReference inputPortRef = new IntByReference();
 
-			final AtomicInteger result = new AtomicInteger();
-			try {
-				CFRunLoop.invokeAndWait(() -> {
-					result.set(peer.MIDIInputPortCreate(clientId, inputName, handler, null, inputPortRef));
-				});
-			} catch (InterruptedException e) {
-				throw new IllegalStateException("CFRunLoop shutting down");
-			}
-
+			AtomicInteger result = new AtomicInteger();
+			Dispatch.getInstance().runOnMainThread(null, c -> {
+				result.set(peer.MIDIInputPortCreate(clientId, inputName, handler, null, inputPortRef));
+			});
 			if (result.get() != 0) {
-				throw new RuntimeException(String.format(
-						"Unable to create MIDI input port (error %d)", result.get()));
+				throw CoreMidiException.fromError(result.get());
 			}
 			int inputPortId = inputPortRef.getValue();
 			readProcs.put(Integer.valueOf(inputPortId), handler);
@@ -145,18 +132,12 @@ public class CoreMidi {
 		Memory connRefCon = new Memory(8);
 		connRefCon.setLong(0L, 0L);
 
-		final AtomicInteger result = new AtomicInteger();
-
-		try {
-			CFRunLoop.invokeAndWait(() -> {
-				result.set(peer.MIDIPortConnectSource(port, source, connRefCon));
-			});
-		} catch (InterruptedException e) {
-			throw new IllegalStateException("CFRunLoop shutting down");
-		}
+		AtomicInteger result = new AtomicInteger();
+		Dispatch.getInstance().runOnMainThread(null, c -> {
+			result.set(peer.MIDIPortConnectSource(port, source, connRefCon));
+		});
 		if (result.get() != 0) {
-			throw new RuntimeException(String.format("Unable to create MIDI output port (error %d)",
-					result.get()));
+			throw CoreMidiException.fromError(result.get());
 		}
 
 		return connRefCon;
@@ -168,11 +149,11 @@ public class CoreMidi {
 	}
 
 	public int createClient(String name) {
-		return createClient(name, null);
+		return createClient(name, (m, r) -> {
+		});
 	}
 
-	public int createClient(String name, Consumer<MIDINotification> midiNotificationHandler) {
-
+	public int createClient(String name, MIDINotifyProc proc) {
 		CoreMidiPeer peer = peer();
 		CoreFoundationPeer cf = cf();
 
@@ -180,36 +161,15 @@ public class CoreMidi {
 		try {
 			IntByReference clientPtr = new IntByReference();
 
-			final AtomicInteger result = new AtomicInteger();
-			final AtomicReference<MIDINotifyProc> notifyProc = new AtomicReference<>();
-
-			try {
-				CFRunLoop.invokeAndWait(() -> {
-					System.out.printf("Creating MIDI client with ID %s%n", name);
-					if (midiNotificationHandler == null) {
-						result.set(peer.MIDIClientCreate(nameRef, null, notifyRefCon, clientPtr));
-						System.out.printf("Creating MIDI client with ID %s and no listener%n", name);
-					} else {
-						MIDINotifyProc proc = (message, refCon) -> {
-							MIDINotification notify = MIDINotification.fromNative(message, 0);
-							midiNotificationHandler.accept(notify);
-						};
-						notifyProc.set(proc);
-						result.set(peer.MIDIClientCreate(nameRef, proc, notifyRefCon, clientPtr));
-						System.out.printf("Creating MIDI client with ID %s and a listener%n", name);
-					}
-				});
-			} catch (Exception e) {
-				throw new RuntimeException("Unable to create MIDI client", e);
-			}
+			AtomicInteger result = new AtomicInteger();
+			Dispatch.getInstance().runOnMainThread(null, c -> {
+				result.set(peer.MIDIClientCreate(nameRef, proc, notifyRefCon, clientPtr));
+			});
 			if (result.get() != 0) {
-				throw new RuntimeException(String.format("Unable to create MIDI client (error %d)", result.get()));
+				throw CoreMidiException.fromError(result.get());
 			}
-
 			int clientId = clientPtr.getValue();
-			if (notifyProc.get() != null) {
-				notifyProcs.put(Integer.valueOf(clientId), notifyProc.get());
-			}
+			notifyProcs.put(Integer.valueOf(clientId), proc);
 			return clientId;
 		} finally {
 			cf.CFRelease(nameRef.getPointer());
@@ -229,7 +189,7 @@ public class CoreMidi {
 		int result = peer.MIDISend(outputPortId, destinationId, p);
 
 		if (result != 0) {
-			throw new RuntimeException(String.format("Error during MIDISend (%d)", result));
+			throw CoreMidiException.fromError(result);
 		}
 	}
 

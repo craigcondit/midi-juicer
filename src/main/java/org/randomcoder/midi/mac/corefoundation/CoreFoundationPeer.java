@@ -23,7 +23,18 @@ public interface CoreFoundationPeer extends Library {
 
 	public void CFRunLoopRun();
 
+	public int CFRunLoopRunInMode(CFStringRef mode, double seconds, boolean returnAfterSourceHandled);
+
 	public Pointer CFRunLoopGetCurrent();
 
 	public void CFRunLoopStop(Pointer rl);
+
+	public Pointer CFRunLoopSourceCreate(Pointer alloc, int order, CFRunLoopSourceContext context);
+
+	public void CFRunLoopAddSource(Pointer rl, Pointer source, CFStringRef mode);
+
+	public void CFRunLoopRemoveSource(Pointer rl, Pointer source, CFStringRef mode);
+
+	public void CFRunLoopSourceSignal(Pointer source);
+
 }

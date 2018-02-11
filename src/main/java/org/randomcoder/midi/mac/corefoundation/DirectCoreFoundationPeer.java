@@ -37,8 +37,24 @@ public class DirectCoreFoundationPeer implements CoreFoundationPeer {
 	public native void CFRunLoopRun();
 
 	@Override
+	public native int CFRunLoopRunInMode(CFStringRef mode, double seconds, boolean returnAfterSourceHandled);
+
+	@Override
 	public native Pointer CFRunLoopGetCurrent();
 
 	@Override
 	public native void CFRunLoopStop(Pointer rl);
+
+	@Override
+	public native Pointer CFRunLoopSourceCreate(Pointer alloc, int order, CFRunLoopSourceContext context);
+
+	@Override
+	public native void CFRunLoopAddSource(Pointer rl, Pointer source, CFStringRef mode);
+
+	@Override
+	public native void CFRunLoopRemoveSource(Pointer rl, Pointer source, CFStringRef mode);
+
+	@Override
+	public native void CFRunLoopSourceSignal(Pointer source);
+
 }
