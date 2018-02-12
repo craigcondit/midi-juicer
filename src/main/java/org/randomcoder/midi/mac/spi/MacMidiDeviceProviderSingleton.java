@@ -60,7 +60,26 @@ public class MacMidiDeviceProviderSingleton extends MidiDeviceProvider {
 		return result.get();
 	}
 
-	public MidiDevice createVirtualDestination(String name, String vendor, String description, String version) {
-		return new MacMidiVirtualDestination(name, vendor, description, version);
+	public MidiDevice createVirtualSource(String name, String vendor, String description, String version) {
+		AtomicReference<MacMidiVirtualSource> result = new AtomicReference<>(null);
+		RunLoop.getDefault()
+				.orElseThrow(() -> new IllegalStateException("Default runloop not set"))
+				.invokeAndWait(() -> {
+					result.set(new MacMidiVirtualSource(name, vendor, description, version));
+				});
+
+		return result.get();
 	}
+
+	public MidiDevice createVirtualDestination(String name, String vendor, String description, String version) {
+		AtomicReference<MacMidiVirtualDestination> result = new AtomicReference<>(null);
+		RunLoop.getDefault()
+				.orElseThrow(() -> new IllegalStateException("Default runloop not set"))
+				.invokeAndWait(() -> {
+					result.set(new MacMidiVirtualDestination(name, vendor, description, version));
+				});
+
+		return result.get();
+	}
+
 }

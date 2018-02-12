@@ -207,6 +207,22 @@ public class CoreMidi {
 		}
 	}
 
+	public void midiReceived(MidiMessage message, long timestamp, int sourceId) {
+		CoreMidiPeer peer = peer();
+		SystemPeer sp = sp();
+
+		long ts = sp.mach_absolute_time();
+
+		MIDIPacketList pl = new MIDIPacketList();
+		pl.getPackets().add(new MIDIPacket(ts, message.getMessage()));
+		Pointer p = pl.write();
+		int result = peer.MIDIReceived(sourceId, p);
+
+		if (result != 0) {
+			throw CoreMidiException.fromError(result);
+		}
+	}
+
 	public void sendMidi(MidiMessage message, long timestamp, int outputPortId, int destinationId) {
 
 		CoreMidiPeer peer = peer();

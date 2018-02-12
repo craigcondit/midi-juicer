@@ -19,9 +19,9 @@ import org.randomcoder.midi.mac.RunLoop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MidiVirtualDestinationDirect {
+public class MidiVirtualDestination {
 
-	private static final Logger LOG = LoggerFactory.getLogger(MidiVirtualDestinationDirect.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MidiVirtualDestination.class);
 
 	public static void main(String[] args) throws Exception {
 

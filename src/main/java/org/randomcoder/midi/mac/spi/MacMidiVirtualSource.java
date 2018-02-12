@@ -11,51 +11,55 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
 
-public class MacMidiSource extends AbstractMacMidiDevice {
+public class MacMidiVirtualSource extends AbstractMacMidiDevice {
 
-	private final AtomicInteger transmitterIdGenerator = new AtomicInteger(0);
+	private final AtomicInteger receiverIdGenerator = new AtomicInteger(0);
 
-	private final List<Transmitter> transmitters = new CopyOnWriteArrayList<>();
+	private final List<Receiver> receivers = new CopyOnWriteArrayList<>();
 
 	private boolean open = false;
 
-	public MacMidiSource(MacMidiDeviceInfo info) {
-		super(info);
+	public MacMidiVirtualSource(String name, String vendor, String description, String version) {
+		super(new MacMidiDeviceInfo(name, vendor, description, version, MacMidiDeviceType.VIRTUAL_SOURCE));
 	}
 
 	@Override
 	public int getMaxReceivers() {
-		return 0;
+		return 1;
 	}
 
 	@Override
 	public Receiver getReceiver() throws MidiUnavailableException {
-		throw new MidiUnavailableException();
+		if (receivers.size() >= 1) {
+			throw new MidiUnavailableException("Virtual sources only support a single receiver");
+		}
+
+		MacMidiVirtualSourceReceiver receiver = new MacMidiVirtualSourceReceiver(this,
+				receiverIdGenerator.incrementAndGet());
+
+		receivers.add(receiver);
+		receiver.open();
+		return receiver;
 	}
 
 	@Override
 	public List<Receiver> getReceivers() {
-		return Collections.emptyList();
+		return Collections.unmodifiableList(new ArrayList<>(receivers));
 	}
 
 	@Override
 	public int getMaxTransmitters() {
-		return -1;
+		return 0;
 	}
 
 	@Override
 	public Transmitter getTransmitter() throws MidiUnavailableException {
-		MacMidiSourceTransmitter transmitter = new MacMidiSourceTransmitter(this,
-				transmitterIdGenerator.incrementAndGet());
-
-		transmitters.add(transmitter);
-		transmitter.open();
-		return transmitter;
+		throw new MidiUnavailableException("No transmitters available");
 	}
 
 	@Override
 	public List<Transmitter> getTransmitters() {
-		return Collections.unmodifiableList(new ArrayList<>(transmitters));
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -78,9 +82,9 @@ public class MacMidiSource extends AbstractMacMidiDevice {
 			return;
 		}
 
-		for (ListIterator<Transmitter> it = transmitters.listIterator(); it.hasPrevious();) {
-			Transmitter transmitter = it.previous();
-			transmitter.close();
+		for (ListIterator<Receiver> it = receivers.listIterator(); it.hasPrevious();) {
+			Receiver receiver = it.previous();
+			receiver.close();
 			it.remove();
 		}
 		open = false;

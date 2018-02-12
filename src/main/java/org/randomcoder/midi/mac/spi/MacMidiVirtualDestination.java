@@ -63,12 +63,12 @@ public class MacMidiVirtualDestination extends AbstractMacMidiDevice {
 	}
 
 	@Override
-	public boolean isOpen() {
+	public synchronized boolean isOpen() {
 		return open;
 	}
 
 	@Override
-	public void open() throws MidiUnavailableException {
+	public synchronized void open() throws MidiUnavailableException {
 		if (isOpen()) {
 			return;
 		}
@@ -77,7 +77,7 @@ public class MacMidiVirtualDestination extends AbstractMacMidiDevice {
 	}
 
 	@Override
-	public void close() {
+	public synchronized void close() {
 		if (!isOpen()) {
 			return;
 		}
