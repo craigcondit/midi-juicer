@@ -3,15 +3,21 @@ package org.randomcoder.midi.mac.spi;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.sound.midi.MidiDevice;
 
 import org.randomcoder.midi.mac.MacMidi;
+import org.randomcoder.midi.mac.RunLoop;
 import org.randomcoder.midi.mac.coremidi.CoreMidi;
 import org.randomcoder.midi.mac.coremidi.CoreMidiException;
 import org.randomcoder.midi.mac.coremidi.CoreMidiProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MacMidiDeviceInfo extends MidiDevice.Info {
+
+	private static final Logger LOG = LoggerFactory.getLogger(MacMidiDeviceInfo.class);
 
 	private final MacMidiDeviceType type;
 	private final int uniqueId;
@@ -43,41 +49,48 @@ public class MacMidiDeviceInfo extends MidiDevice.Info {
 	}
 
 	public static MidiDevice.Info[] getDeviceInfo() throws CoreMidiException {
-		if (!MacMidi.isAvailable()) {
+		if (!MacMidi.available()) {
 			return new MidiDevice.Info[0];
 		}
 
-		CoreMidi midi = CoreMidi.getInstance();
+		AtomicReference<MidiDevice.Info[]> returnRef = new AtomicReference<>(null);
+		RunLoop.getDefault()
+				.orElseThrow(() -> new IllegalStateException("Default runloop not set"))
+				.invokeAndWait(() -> {
+					CoreMidi midi = CoreMidi.getInstance();
 
-		List<MidiDevice.Info> devices = new ArrayList<>();
+					List<MidiDevice.Info> devices = new ArrayList<>();
 
-		int sourceCount = midi.getNumberOfSources();
-		MacMidi.debug("Source count: %d", sourceCount);
+					int sourceCount = midi.getNumberOfSources();
+					LOG.debug("Source count: {}", sourceCount);
 
-		for (int i = 0; i < sourceCount; i++) {
-			int handle = midi.getSource(i);
-			if (handle == 0) {
-				continue;
-			}
-			createDeviceInfo(midi, handle, MacMidiDeviceType.SOURCE).ifPresent(devices::add);
-		}
+					for (int i = 0; i < sourceCount; i++) {
+						int handle = midi.getSource(i);
+						if (handle == 0) {
+							continue;
+						}
+						createDeviceInfo(midi, handle, MacMidiDeviceType.SOURCE).ifPresent(devices::add);
+					}
 
-		int destCount = midi.getNumberOfDestinations();
-		MacMidi.debug("Destination count: %d", destCount);
+					int destCount = midi.getNumberOfDestinations();
+					LOG.debug("Destination count: {}", destCount);
 
-		for (int i = 0; i < destCount; i++) {
-			int handle = midi.getDestination(i);
-			if (handle == 0) {
-				continue;
-			}
-			createDeviceInfo(midi, handle, MacMidiDeviceType.DESTINATION)
-					.ifPresent(devices::add);
-		}
+					for (int i = 0; i < destCount; i++) {
+						int handle = midi.getDestination(i);
+						if (handle == 0) {
+							continue;
+						}
+						createDeviceInfo(midi, handle, MacMidiDeviceType.DESTINATION)
+								.ifPresent(devices::add);
+					}
 
-		return devices.toArray(new MidiDevice.Info[devices.size()]);
+					returnRef.set(devices.toArray(new MidiDevice.Info[devices.size()]));
+				});
+
+		return returnRef.get();
 	}
 
-	public static Optional<MacMidiDeviceInfo> createDeviceInfo(CoreMidi midi, int handle, MacMidiDeviceType type) {
+	private static Optional<MacMidiDeviceInfo> createDeviceInfo(CoreMidi midi, int handle, MacMidiDeviceType type) {
 		Integer uniqueId = midi.getIntegerProperty(CoreMidiProperty.kMIDIPropertyUniqueID, handle);
 		Integer deviceId = midi.getIntegerProperty(CoreMidiProperty.kMIDIPropertyDeviceID, handle);
 		String name = midi.getStringProperty(CoreMidiProperty.kMIDIPropertyName, handle);

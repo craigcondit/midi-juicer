@@ -1,28 +1,30 @@
 package org.randomcoder.midi.samples;
 
 import org.randomcoder.midi.mac.MacMidi;
+import org.randomcoder.midi.mac.RunLoop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MidiListener {
+	private static final Logger LOG = LoggerFactory.getLogger(MidiListener.class);
 
 	public static void main(String[] args) throws Exception {
 
-		if (MacMidi.isAvailable()) {
-			MacMidi.setDebug(true);
-			MacMidi.init();
+		try (RunLoop rl = RunLoop.spawn(true)) {
 
-			MacMidi.addSetupChangedListener(() -> {
-				System.out.println("setup changed");
-			});
-		}
+			if (MacMidi.available()) {
+				MacMidi.init();
 
-		System.out.println("Ready");
+				MacMidi.addSetupChangedListener(() -> {
+					LOG.info("MIDI setup changed");
+				});
+			}
 
-		try {
+			LOG.info("MacMidi setup complete");
+
 			while (true) {
 				Thread.sleep(1000L);
 			}
-		} finally {
-			MacMidi.shutdown();
 		}
 
 	}

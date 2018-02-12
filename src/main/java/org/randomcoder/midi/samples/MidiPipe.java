@@ -12,25 +12,30 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
 
 import org.randomcoder.midi.mac.MacMidi;
+import org.randomcoder.midi.mac.RunLoop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MidiPipe {
 
+	private static final Logger LOG = LoggerFactory.getLogger(MidiPipe.class);
+
 	public static void main(String[] args) throws Exception {
-		if (MacMidi.isAvailable()) {
-			MacMidi.setDebug(true);
-			MacMidi.init();
 
-			MacMidi.addSetupChangedListener(() -> {
-				System.out.println("setup changed");
-			});
-		}
+		try (RunLoop rl = RunLoop.spawn(true)) {
+			if (MacMidi.available()) {
+				MacMidi.init();
 
-		System.out.println("MIDI initialized");
+				MacMidi.addSetupChangedListener(() -> {
+					LOG.info("MIDI setup changed");
+				});
+			}
 
-		try {
+			LOG.info("Ready");
+
 			MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
 			for (MidiDevice.Info info : infos) {
-				System.out.printf("%s: vendor=%s, description=%s%n",
+				LOG.info("Found device: {}, vendor={}, description={}",
 						info.getName(), info.getVendor(), info.getDescription());
 			}
 
@@ -39,12 +44,13 @@ public class MidiPipe {
 
 			if (input.isPresent() && output.isPresent()) {
 				try (MidiDevice inDev = input.get(); Transmitter transmitter = inDev.getTransmitter()) {
-					System.out.printf("Opened transmitter for device: %s%n", inDev);
+
+					LOG.debug("Opened transmitter for device: {}", inDev);
 					try (MidiDevice outDev = output.get(); Receiver receiver = outDev.getReceiver()) {
-						System.out.printf("Opened receiver for device: %s%n", outDev);
+						LOG.debug("Opened receiver for device: {}", outDev);
 
 						transmitter.setReceiver(output.get().getReceiver());
-						System.out.println("Connected input -> output");
+						LOG.debug("Connected input -> output");
 					}
 
 					while (true) {
@@ -52,11 +58,8 @@ public class MidiPipe {
 					}
 				}
 			} else {
-				System.out.println("WARNING: Did not find all devices");
+				LOG.warn("Did not find all devices");
 			}
-
-		} finally {
-			MacMidi.shutdown();
 		}
 	}
 

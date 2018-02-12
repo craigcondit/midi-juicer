@@ -1,7 +1,10 @@
 package org.randomcoder.midi.mac.spi;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.sound.midi.MidiDevice;
 
+import org.randomcoder.midi.mac.RunLoop;
 import org.randomcoder.midi.mac.coremidi.CoreMidi;
 
 abstract public class AbstractMacMidiDevice implements MidiDevice {
@@ -10,7 +13,15 @@ abstract public class AbstractMacMidiDevice implements MidiDevice {
 
 	protected AbstractMacMidiDevice(MacMidiDeviceInfo info) {
 		this.info = info;
-		this.deviceRef = CoreMidi.getInstance().getDeviceRefByUniqueID(info.getUniqueId());
+
+		AtomicInteger aDeviceRef = new AtomicInteger(-1);
+		RunLoop.getDefault()
+				.orElseThrow(() -> new IllegalStateException("Default runloop not set"))
+				.invokeAndWait(() -> {
+					aDeviceRef.set(CoreMidi.getInstance().getDeviceRefByUniqueID(info.getUniqueId()));
+				});
+
+		this.deviceRef = aDeviceRef.get();
 	}
 
 	@Override

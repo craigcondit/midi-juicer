@@ -11,6 +11,8 @@ import org.randomcoder.libusb.UsbDeviceDescriptor;
 import org.randomcoder.libusb.UsbDeviceDescriptors;
 import org.randomcoder.libusb.UsbException;
 import org.randomcoder.libusb.UsbLogLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
@@ -29,6 +31,8 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
 public class AbletonPush2 implements Closeable {
+
+	private static final Logger LOG = LoggerFactory.getLogger(AbletonPush2.class);
 
 	private static final UsbLogLevel LOG_LEVEL = UsbLogLevel.INFO;
 
@@ -146,7 +150,7 @@ public class AbletonPush2 implements Closeable {
 					int blue = (src[srcOffset] >> 3) & 0b0001_1111;
 					int green = (src[srcOffset + 1] >> 2) & 0b0011_1111;
 					int red = (src[srcOffset + 2] >> 3) & 0b0001_1111;
-					
+
 					int color = red | (green << 5) | (blue << 11);
 
 					dest[dstOffset] = (byte) (color & 0xff);
@@ -155,7 +159,7 @@ public class AbletonPush2 implements Closeable {
 					srcOffset += 4;
 					dstOffset += 2;
 				}
-				
+
 				dstOffset += PADDING_PER_ROW;
 			}
 		}
@@ -324,7 +328,7 @@ public class AbletonPush2 implements Closeable {
 			WebView webview = new WebView();
 			webview.getEngine().load(
 					"https://player.vimeo.com/video/48070605?autoplay=1");
-//					"http://www.youtube.com/embed/SPqlnSVDpXQ?autoplay=1");
+			// "http://www.youtube.com/embed/SPqlnSVDpXQ?autoplay=1");
 			webview.setPrefSize(COLS, ROWS);
 
 			stage.setScene(new Scene(webview));
@@ -340,7 +344,7 @@ public class AbletonPush2 implements Closeable {
 			Runnable eventLoop = () -> {
 				try {
 					try (AbletonPush2 push = new AbletonPush2()) {
-						System.out.println("Ableton Push 2 initialized");
+						LOG.debug("Ableton Push 2 initialized");
 
 						while (!shutdown) {
 
@@ -357,10 +361,10 @@ public class AbletonPush2 implements Closeable {
 							push.toggleActiveFramebuffer();
 							push.sendActiveFramebuffer();
 
-//							Thread.sleep(10L);
+							// Thread.sleep(10L);
 						}
 					}
-					System.out.println("Ableton Push 2 closed");
+					LOG.debug("Ableton Push 2 closed");
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}

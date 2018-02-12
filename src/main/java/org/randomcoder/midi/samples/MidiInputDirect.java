@@ -7,31 +7,31 @@ import java.util.stream.Collectors;
 
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.Transmitter;
-import javax.sound.midi.spi.MidiDeviceProvider;
 
 import org.randomcoder.midi.MidiHandler;
 import org.randomcoder.midi.mac.MacMidi;
-import org.randomcoder.midi.mac.spi.MacMidiDeviceProvider;
+import org.randomcoder.midi.mac.RunLoop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MidiInputDirect {
 
+	private static final Logger LOG = LoggerFactory.getLogger(MidiInputDirect.class);
+
 	public static void main(String[] args) throws Exception {
-		if (MacMidi.isAvailable()) {
-			MacMidi.setDebug(true);
-			MacMidi.init();
 
-			MacMidi.addSetupChangedListener(() -> {
-				System.out.println("setup changed");
-			});
-		}
+		try (RunLoop rl = RunLoop.spawn(true)) {
+			if (MacMidi.available()) {
+				MacMidi.init();
 
-		System.out.println("MIDI initialized");
+				MacMidi.addSetupChangedListener(() -> {
+					LOG.info("MIDI setup changed");
+				});
+			}
 
-		try {
-			MidiDeviceProvider p = MacMidiDeviceProvider.getInstance();
+			LOG.info("MacMidi setup complete");
 
-			List<MidiDevice.Info> deviceInfos = Arrays.stream(p.getDeviceInfo())
-					.filter(MacMidi::isMacMidiDevice)
+			List<MidiDevice.Info> deviceInfos = Arrays.stream(MacMidi.getDeviceInfo())
 					.filter(di -> "MIDI1".equals(di.getName()))
 					.filter(di -> "Nektar".equals(di.getVendor()))
 					.filter(di -> "Impact GX49 MIDI1".equals(di.getDescription()))
@@ -40,7 +40,7 @@ public class MidiInputDirect {
 			List<MidiDevice> devices = deviceInfos.stream()
 					.map(di -> {
 						try {
-							return p.getDevice(di);
+							return MacMidi.getDevice(di);
 						} catch (Exception e) {
 							return null;
 						}
@@ -50,24 +50,21 @@ public class MidiInputDirect {
 					.collect(Collectors.toList());
 
 			if (devices.isEmpty()) {
-				System.out.println("No matching devices found");
+				LOG.warn("No matching devices found");
 				return;
 			}
 
 			try (MidiDevice device = devices.get(0); Transmitter transmitter = device.getTransmitter()) {
-				System.out.printf("Opened transmitter for device: %s%n", device);
+				LOG.info("Opened transmitter for device: {}", device);
 
 				transmitter.setReceiver(MidiHandler.toReceiver((m, t) -> {
-					System.out.println(m);
+					LOG.debug("MIDI received: {}", m);
 				}));
 
 				while (true) {
 					Thread.sleep(1000L);
 				}
 			}
-
-		} finally {
-			MacMidi.shutdown();
 		}
 	}
 

@@ -1,54 +1,50 @@
 package org.randomcoder.midi.mac;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.sound.midi.MidiDevice;
 
 import org.randomcoder.midi.mac.coremidi.CoreMidi;
-import org.randomcoder.midi.mac.coremidi.CoreMidiException;
+import org.randomcoder.midi.mac.coremidi.CoreMidiServiceFactory;
 import org.randomcoder.midi.mac.coremidi.MIDINotification;
 import org.randomcoder.midi.mac.coremidi.MIDINotificationMessageID;
-import org.randomcoder.midi.mac.dispatch.Dispatch;
-import org.randomcoder.midi.mac.spi.AbstractMacMidiDevice;
-import org.randomcoder.midi.mac.spi.MacMidiDeviceInfo;
+import org.randomcoder.midi.mac.spi.MacMidiDeviceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MacMidi {
+
+	private static final Logger LOG = LoggerFactory.getLogger(MacMidi.class);
+
 	private static final Object lock = new Object();
 
 	private static volatile boolean init = false;
-	private static volatile Integer clientId;
-	private static volatile SetupChangePoller poller;
-	private static volatile String currentSetup = "";
+	private static volatile int clientId = -1;
 	private static final Set<Runnable> setupChangedListeners = new LinkedHashSet<>();
-	private static volatile boolean debug = false;
 
-	public static void setDebug(boolean value) {
-		debug = value;
-	}
+	private static final AtomicReference<Boolean> available = new AtomicReference<>(null);
 
-	public static void debug(String format, Object... args) {
-		if (debug) {
-			System.err.printf("DEBUG: " + format + "%n", args);
+	public static boolean available() {
+		Boolean status = available.get();
+		if (status != null) {
+			return status.booleanValue();
 		}
-	}
 
-	public static boolean isAvailable() {
 		try {
-			CoreMidi.getInstance().getNumberOfDevices();
+			CoreMidiServiceFactory.getPeer();
 		} catch (Throwable t) {
+			available.set(Boolean.FALSE);
 			return false;
 		}
-
+		available.set(Boolean.TRUE);
 		return true;
 	}
 
 	private static void handleSetupChanged() {
-		refreshSetup(false);
 		List<Runnable> handlers = new ArrayList<>();
 		synchronized (lock) {
 			handlers.addAll(setupChangedListeners);
@@ -72,27 +68,36 @@ public class MacMidi {
 		}
 	}
 
+	public static int getClientId() {
+		init();
+		return clientId;
+	}
+
 	public static void init() {
+		if (!available()) {
+			throw new IllegalStateException("CoreMIDI is not available");
+		}
+
 		synchronized (lock) {
 			if (init) {
 				return;
 			}
 
-			clientId = CoreMidi.getInstance()
-					.createClient("MacMidi-default-client", (n, c) -> {
-						if (MIDINotification.fromNative(n, 0)
-								.getType() == MIDINotificationMessageID.kMIDIMsgSetupChanged) {
-							handleSetupChanged();
-						}
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdownInternal(true)));
+
+			RunLoop.getDefault()
+					.orElseThrow(() -> new IllegalStateException("Default runloop not set"))
+					.invokeAndWait(() -> {
+						clientId = CoreMidi.getInstance()
+								.createClient("MacMidi", (n, c) -> {
+									LOG.debug("MIDINotifyProc() called");
+									if (MIDINotification.fromNative(n, 0)
+											.getType() == MIDINotificationMessageID.kMIDIMsgSetupChanged) {
+										handleSetupChanged();
+									}
+								});
+						LOG.debug("Created client");
 					});
-
-			setupChangedListeners.clear();
-
-			// if (isAvailable()) {
-			// refreshSetup(false);
-			// poller = new SetupChangePoller();
-			// poller.start();
-			// }
 
 			init = true;
 		}
@@ -100,86 +105,48 @@ public class MacMidi {
 
 	public static void shutdown() {
 		synchronized (lock) {
-			if (poller != null) {
-				poller.shutdown();
-			}
 			setupChangedListeners.clear();
-			if (clientId != null) {
-				CoreMidi.getInstance().closeClient(clientId);
-				clientId = null;
+			if (clientId != -1) {
+				RunLoop.getDefault().ifPresentOrElse(
+						t -> shutdownInternal(false),
+						() -> shutdownInternal(false));
 			}
 			init = false;
 		}
 	}
 
-	static void refreshSetup(boolean sendNotifications) {
-		if (!isAvailable()) {
-			return;
+	private static void shutdownInternal(boolean jvmExit) {
+		if (jvmExit) {
+			LOG.debug("Shutting down due to JVM exit");
+		} else if (!RunLoop.executingOnDefaultRunLoop()) {
+			LOG.debug("Executing shutdown on thread != default runloop");
 		}
-
-		Dispatch.getInstance().runOnMainThread(null, c -> {
-			try {
-				MidiDevice.Info[] infos = MacMidiDeviceInfo.getDeviceInfo();
-				String setup = Arrays.stream(infos)
-						.filter(info -> info instanceof MacMidiDeviceInfo)
-						.map(info -> (MacMidiDeviceInfo) info)
-						.map(info -> info.getDescriptor())
-						.sorted()
-						.collect(Collectors.joining("\n"));
-
-				System.out.printf("Setup: %n%s%n%n", setup);
-
-				if (setup.equals(currentSetup)) {
-					return;
-				}
-
-				currentSetup = setup;
-				if (sendNotifications) {
-					handleSetupChanged();
-				}
-			} catch (CoreMidiException ignored) {
-			}
-		});
+		CoreMidi.getInstance().closeClient(clientId);
+		clientId = -1;
 	}
 
+	// native interface
+
+	public static boolean isDeviceSupported(MidiDevice.Info info) {
+		return MacMidiDeviceProvider.getInstance().isDeviceSupported(info);
+	}
+
+	public static MidiDevice getDevice(MidiDevice.Info info) {
+		return MacMidiDeviceProvider.getInstance().getDevice(info);
+	}
+
+	public static MidiDevice.Info[] getDeviceInfo() {
+		return MacMidiDeviceProvider.getInstance().getDeviceInfo();
+	}
+
+	// extended interface
+
 	public static boolean isMacMidiDevice(MidiDevice.Info info) {
-		return info instanceof MacMidiDeviceInfo;
+		return MacMidiDeviceProvider.getInstance().isDeviceSupported(info);
 	}
 
 	public static boolean isMacMidiDevice(MidiDevice device) {
-		return device instanceof AbstractMacMidiDevice;
-	}
-
-	private static class SetupChangePoller extends Thread {
-		private volatile boolean shutdown = false;
-
-		public SetupChangePoller() {
-			super("MIDI setup poller");
-			setDaemon(true);
-		}
-
-		@Override
-		public void run() {
-			while (!shutdown) {
-				try {
-					Thread.sleep(1000L);
-					refreshSetup(true);
-				} catch (InterruptedException e) {
-					return;
-				}
-			}
-		}
-
-		public void shutdown() {
-			shutdown = true;
-			synchronized (this) {
-				interrupt();
-			}
-			try {
-				join();
-			} catch (InterruptedException e) {
-			}
-		}
+		return MacMidiDeviceProvider.getInstance().isDeviceSupported(device.getDeviceInfo());
 	}
 
 }

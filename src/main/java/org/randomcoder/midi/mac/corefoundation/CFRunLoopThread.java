@@ -7,10 +7,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.randomcoder.midi.mac.coremidi.CoreMidiServiceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Pointer;
 
 public class CFRunLoopThread extends Thread implements AutoCloseable {
+
+	private static final Logger LOG = LoggerFactory.getLogger(CFRunLoopThread.class);
 
 	private static final String KCF_RUN_LOOP_COMMON_MODES = "kCFRunLoopCommonModes";
 	private static final String KCF_RUN_LOOP_DEFAULT_MODE = "kCFRunLoopDefaultMode";
@@ -38,32 +42,32 @@ public class CFRunLoopThread extends Thread implements AutoCloseable {
 	public void run() {
 		final Pointer currentRunLoop = cf.CFRunLoopGetCurrent();
 
-		System.out.println("Creating context");
+		LOG.debug("Creating context");
 		CFRunLoopSourceContext context = new CFRunLoopSourceContext(currentRunLoop, c -> {
-			System.out.println("CFRunLoopSource called");
+			LOG.debug("CFRunLoopSource called");
 		});
 
-		System.out.println("Retaining current run loop");
 		cf.CFRetain(currentRunLoop);
 
-		System.out.println("Resolving property");
 		CFStringRef commonModes = resolve(KCF_RUN_LOOP_COMMON_MODES);
 		CFStringRef defaultMode = resolve(KCF_RUN_LOOP_DEFAULT_MODE);
 
-		System.out.println("Creating source");
+		LOG.debug("Creating source");
 		final Pointer source = cf.CFRunLoopSourceCreate(null, 0, context);
-		System.out.println("Adding source");
+
+		LOG.debug("Adding source");
 		cf.CFRunLoopAddSource(currentRunLoop, source, commonModes);
-		System.out.println("Signalling source");
+
+		LOG.debug("Signalling source");
 		cf.CFRunLoopSourceSignal(source);
 
-		System.out.println("Running run loop");
+		LOG.debug("Running run loop");
 		cf.CFRunLoopRunInMode(defaultMode, 0.10d, false);
 
-		System.out.println("Removing source");
+		LOG.debug("Removing source");
 		cf.CFRunLoopRemoveSource(currentRunLoop, source, commonModes);
 
-		System.out.println("Init complete");
+		LOG.debug("Init complete");
 		init.countDown();
 
 		try {
@@ -71,9 +75,9 @@ public class CFRunLoopThread extends Thread implements AutoCloseable {
 				while (!deque.isEmpty() && !shutdown) {
 					Runnable r = deque.takeFirst();
 					try {
-						System.out.printf("Running task %s%n", r);
+						LOG.debug("Running task {}", r);
 						r.run();
-						System.out.printf("Finished task %s%n", r);
+						LOG.debug("Finished task {}", r);
 					} catch (Throwable t) {
 						exceptionHandler.accept(t);
 					} finally {

@@ -11,22 +11,27 @@ import javax.sound.midi.Transmitter;
 
 import org.randomcoder.midi.MidiHandler;
 import org.randomcoder.midi.mac.MacMidi;
+import org.randomcoder.midi.mac.RunLoop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MidiInput {
 
+	private static final Logger LOG = LoggerFactory.getLogger(MidiInput.class);
+
 	public static void main(String[] args) throws Exception {
-		if (MacMidi.isAvailable()) {
-			MacMidi.setDebug(true);
-			MacMidi.init();
 
-			MacMidi.addSetupChangedListener(() -> {
-				System.out.println("setup changed");
-			});
-		}
+		try (RunLoop rl = RunLoop.spawn(true)) {
+			if (MacMidi.available()) {
+				MacMidi.init();
 
-		System.out.println("MIDI initialized");
+				MacMidi.addSetupChangedListener(() -> {
+					LOG.info("MIDI setup changed");
+				});
+			}
 
-		try {
+			LOG.info("MacMidi setup complete");
+
 			List<MidiDevice.Info> deviceInfos = Arrays.stream(MidiSystem.getMidiDeviceInfo())
 					.filter(MacMidi::isMacMidiDevice)
 					.filter(di -> "MIDI1".equals(di.getName()))
@@ -47,24 +52,21 @@ public class MidiInput {
 					.collect(Collectors.toList());
 
 			if (devices.isEmpty()) {
-				System.out.println("No matching devices found");
+				LOG.warn("No matching devices found");
 				return;
 			}
 
 			try (MidiDevice device = devices.get(0); Transmitter transmitter = device.getTransmitter()) {
-				System.out.printf("Opened transmitter for device: %s%n", device);
+				LOG.info("Opened transmitter for device: {}", device);
 
 				transmitter.setReceiver(MidiHandler.toReceiver((m, t) -> {
-					System.out.println(m);
+					LOG.debug("MIDI received: {}", m);
 				}));
 
 				while (true) {
 					Thread.sleep(1000L);
 				}
 			}
-
-		} finally {
-			MacMidi.shutdown();
 		}
 	}
 

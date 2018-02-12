@@ -8,31 +8,21 @@ import javax.sound.midi.MidiDevice;
 import javax.sound.midi.spi.MidiDeviceProvider;
 
 import org.randomcoder.midi.mac.MacMidi;
-import org.randomcoder.midi.mac.dispatch.Dispatch;
+import org.randomcoder.midi.mac.RunLoop;
 
 public class MacMidiDeviceProviderSingleton extends MidiDeviceProvider {
 
 	private final ConcurrentMap<Integer, MacMidiSource> sources = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Integer, MacMidiDestination> destinations = new ConcurrentHashMap<>();
 
-	private volatile boolean available = false;
-
 	@Override
 	public boolean isDeviceSupported(MidiDevice.Info info) {
 		return info instanceof MacMidiDeviceInfo;
 	}
 
-	private boolean available() {
-		if (available) {
-			return available;
-		}
-		available = MacMidi.isAvailable();
-		return available;
-	}
-
 	@Override
 	public MidiDevice getDevice(MidiDevice.Info info) {
-		if (!available()) {
+		if (!MacMidi.available()) {
 			throw new UnsupportedOperationException("MacMidi subsystem is unavailable");
 		}
 
@@ -52,18 +42,20 @@ public class MacMidiDeviceProviderSingleton extends MidiDeviceProvider {
 
 	@Override
 	public MidiDevice.Info[] getDeviceInfo() {
-		if (!available()) {
+		if (!MacMidi.available()) {
 			return new MidiDevice.Info[0];
 		}
 
 		AtomicReference<MidiDevice.Info[]> result = new AtomicReference<>(new MidiDevice.Info[0]);
-		Dispatch.getInstance().runOnMainThread(null, c -> {
-			try {
-				result.set(MacMidiDeviceInfo.getDeviceInfo());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		});
+		RunLoop.getDefault()
+				.orElseThrow(() -> new IllegalStateException("Default runloop not set"))
+				.invokeAndWait(() -> {
+					try {
+						result.set(MacMidiDeviceInfo.getDeviceInfo());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				});
 
 		return result.get();
 	}

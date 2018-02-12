@@ -1,10 +1,14 @@
 package org.randomcoder.midi.mac.coremidi;
 
-import org.randomcoder.midi.mac.MacMidi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Pointer;
 
 abstract public class MIDINotification {
+
+	private static final Logger LOG = LoggerFactory.getLogger(MIDINotification.class);
+
 	private final MIDINotificationMessageID type;
 
 	MIDINotification(MIDINotificationMessageID type) {
@@ -16,8 +20,8 @@ abstract public class MIDINotification {
 	}
 
 	public static MIDINotification fromNative(Pointer p, int offset) {
-		MacMidi.debug("MIDI notification received");
-		
+		LOG.debug("MIDI notification received");
+
 		MIDINotificationMessageID type = MIDINotificationMessageID.byValue(p.getInt(offset));
 		offset += 4;
 		int size = p.getInt(offset) - 8;

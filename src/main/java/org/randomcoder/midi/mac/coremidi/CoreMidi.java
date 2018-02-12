@@ -3,14 +3,12 @@ package org.randomcoder.midi.mac.coremidi;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.sound.midi.MidiMessage;
 
 import org.randomcoder.midi.mac.corefoundation.CFStringRef;
 import org.randomcoder.midi.mac.corefoundation.CoreFoundationPeer;
 import org.randomcoder.midi.mac.corefoundation.CoreFoundationServiceFactory;
-import org.randomcoder.midi.mac.dispatch.Dispatch;
 import org.randomcoder.midi.mac.system.SystemPeer;
 import org.randomcoder.midi.mac.system.SystemServiceFactory;
 
@@ -88,12 +86,9 @@ public class CoreMidi {
 		try {
 			IntByReference outputPortRef = new IntByReference();
 
-			AtomicInteger result = new AtomicInteger();
-			Dispatch.getInstance().runOnMainThread(null, c -> {
-				result.set(peer.MIDIOutputPortCreate(clientId, outputName, outputPortRef));
-			});
-			if (result.get() != 0) {
-				throw CoreMidiException.fromError(result.get());
+			int result = peer.MIDIOutputPortCreate(clientId, outputName, outputPortRef);
+			if (result != 0) {
+				throw CoreMidiException.fromError(result);
 			}
 			return outputPortRef.getValue();
 		} finally {
@@ -111,12 +106,9 @@ public class CoreMidi {
 		try {
 			IntByReference inputPortRef = new IntByReference();
 
-			AtomicInteger result = new AtomicInteger();
-			Dispatch.getInstance().runOnMainThread(null, c -> {
-				result.set(peer.MIDIInputPortCreate(clientId, inputName, handler, null, inputPortRef));
-			});
-			if (result.get() != 0) {
-				throw CoreMidiException.fromError(result.get());
+			int result = peer.MIDIInputPortCreate(clientId, inputName, handler, null, inputPortRef);
+			if (result != 0) {
+				throw CoreMidiException.fromError(result);
 			}
 			int inputPortId = inputPortRef.getValue();
 			readProcs.put(Integer.valueOf(inputPortId), handler);
@@ -132,12 +124,9 @@ public class CoreMidi {
 		Memory connRefCon = new Memory(8);
 		connRefCon.setLong(0L, 0L);
 
-		AtomicInteger result = new AtomicInteger();
-		Dispatch.getInstance().runOnMainThread(null, c -> {
-			result.set(peer.MIDIPortConnectSource(port, source, connRefCon));
-		});
-		if (result.get() != 0) {
-			throw CoreMidiException.fromError(result.get());
+		int result = peer.MIDIPortConnectSource(port, source, connRefCon);
+		if (result != 0) {
+			throw CoreMidiException.fromError(result);
 		}
 
 		return connRefCon;
@@ -148,11 +137,6 @@ public class CoreMidi {
 		peer.MIDIPortDisconnectSource(port, source);
 	}
 
-	public int createClient(String name) {
-		return createClient(name, (m, r) -> {
-		});
-	}
-
 	public int createClient(String name, MIDINotifyProc proc) {
 		CoreMidiPeer peer = peer();
 		CoreFoundationPeer cf = cf();
@@ -161,12 +145,9 @@ public class CoreMidi {
 		try {
 			IntByReference clientPtr = new IntByReference();
 
-			AtomicInteger result = new AtomicInteger();
-			Dispatch.getInstance().runOnMainThread(null, c -> {
-				result.set(peer.MIDIClientCreate(nameRef, proc, notifyRefCon, clientPtr));
-			});
-			if (result.get() != 0) {
-				throw CoreMidiException.fromError(result.get());
+			int result = peer.MIDIClientCreate(nameRef, proc, notifyRefCon, clientPtr);
+			if (result != 0) {
+				throw CoreMidiException.fromError(result);
 			}
 			int clientId = clientPtr.getValue();
 			notifyProcs.put(Integer.valueOf(clientId), proc);

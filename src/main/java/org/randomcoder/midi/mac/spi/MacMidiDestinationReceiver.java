@@ -39,7 +39,8 @@ public class MacMidiDestinationReceiver implements MidiDeviceReceiver {
 
 		destination.open();
 
-		clientId = midi.createClient(clientName);
+		clientId = midi.createClient(clientName, (m, t) -> {
+		});
 		outputPortId = midi.createOutputPort(outputPortName, clientId);
 
 		open = true;
