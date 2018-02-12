@@ -20,8 +20,16 @@ public class MacMidiDeviceInfo extends MidiDevice.Info {
 	private static final Logger LOG = LoggerFactory.getLogger(MacMidiDeviceInfo.class);
 
 	private final MacMidiDeviceType type;
-	private final int uniqueId;
-	private final Integer deviceId;
+	private int uniqueId;
+	private Integer deviceId;
+
+	protected MacMidiDeviceInfo(String name, String vendor, String description, String version,
+			MacMidiDeviceType type) {
+		super(name, vendor, description, version);
+		this.type = type;
+		this.uniqueId = Integer.MIN_VALUE;
+		this.deviceId = null;
+	}
 
 	protected MacMidiDeviceInfo(String name, String vendor, String description, String version,
 			MacMidiDeviceType type, int uniqueId, Integer deviceId) {

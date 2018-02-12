@@ -60,11 +60,21 @@ public class CoreMidi {
 
 	public void closeInputPort(int inputPortId) {
 		peer().MIDIPortDispose(inputPortId);
+		readProcs.remove(Integer.valueOf(inputPortId));
 	}
 
 	public void closeClient(int clientId) {
 		peer().MIDIClientDispose(clientId);
 		notifyProcs.remove(Integer.valueOf(clientId));
+	}
+
+	public void closeSource(int sourceId) {
+		peer().MIDIEndpointDispose(sourceId);
+	}
+
+	public void closeDestination(int destId) {
+		peer().MIDIEndpointDispose(destId);
+		readProcs.remove(Integer.valueOf(destId));
 	}
 
 	public int getDeviceRefByUniqueID(int uniqueId) {
@@ -76,6 +86,46 @@ public class CoreMidi {
 			throw CoreMidiException.fromError(result);
 		}
 		return sourceRef.getValue();
+	}
+
+	public int createSource(int clientId, String name) {
+		CoreMidiPeer peer = peer();
+		CoreFoundationPeer cf = cf();
+
+		CFStringRef sourceName = CFStringRef.createNative(name);
+		try {
+			IntByReference outSrcRef = new IntByReference();
+
+			int result = peer.MIDISourceCreate(clientId, sourceName, outSrcRef);
+			if (result != 0) {
+				throw CoreMidiException.fromError(result);
+			}
+			return outSrcRef.getValue();
+		} finally {
+			cf.CFRelease(sourceName.getPointer());
+		}
+	}
+
+	public int createDestination(String name, int clientId, MIDIReadProc handler) {
+		Objects.requireNonNull(handler);
+
+		CoreMidiPeer peer = peer();
+		CoreFoundationPeer cf = cf();
+
+		CFStringRef destName = CFStringRef.createNative(name);
+		try {
+			IntByReference outDestRef = new IntByReference();
+
+			int result = peer.MIDIDestinationCreate(clientId, destName, handler, null, outDestRef);
+			if (result != 0) {
+				throw CoreMidiException.fromError(result);
+			}
+			int outDestId = outDestRef.getValue();
+			readProcs.put(Integer.valueOf(outDestId), handler);
+			return outDestId;
+		} finally {
+			cf.CFRelease(destName.getPointer());
+		}
 	}
 
 	public int createOutputPort(String name, int clientId) {

@@ -7,7 +7,7 @@ public class MacMidiDeviceProvider extends MidiDeviceProvider {
 
 	private static final MacMidiDeviceProviderSingleton SINGLETON = new MacMidiDeviceProviderSingleton();
 
-	public static MidiDeviceProvider getInstance() {
+	public static MacMidiDeviceProviderSingleton getInstance() {
 		return SINGLETON;
 	}
 

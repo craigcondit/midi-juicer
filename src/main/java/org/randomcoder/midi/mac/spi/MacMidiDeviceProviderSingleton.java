@@ -60,4 +60,7 @@ public class MacMidiDeviceProviderSingleton extends MidiDeviceProvider {
 		return result.get();
 	}
 
+	public MidiDevice createVirtualDestination(String name, String vendor, String description, String version) {
+		return new MacMidiVirtualDestination(name, vendor, description, version);
+	}
 }

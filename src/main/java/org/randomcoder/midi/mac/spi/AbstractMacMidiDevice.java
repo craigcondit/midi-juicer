@@ -14,14 +14,23 @@ abstract public class AbstractMacMidiDevice implements MidiDevice {
 	protected AbstractMacMidiDevice(MacMidiDeviceInfo info) {
 		this.info = info;
 
-		AtomicInteger aDeviceRef = new AtomicInteger(-1);
-		RunLoop.getDefault()
-				.orElseThrow(() -> new IllegalStateException("Default runloop not set"))
-				.invokeAndWait(() -> {
-					aDeviceRef.set(CoreMidi.getInstance().getDeviceRefByUniqueID(info.getUniqueId()));
-				});
+		switch (info.getType()) {
+		case SOURCE:
+		case DESTINATION:
+			AtomicInteger aDeviceRef = new AtomicInteger(-1);
+			RunLoop.getDefault()
+					.orElseThrow(() -> new IllegalStateException("Default runloop not set"))
+					.invokeAndWait(() -> {
+						aDeviceRef.set(CoreMidi.getInstance().getDeviceRefByUniqueID(info.getUniqueId()));
+					});
 
-		this.deviceRef = aDeviceRef.get();
+			this.deviceRef = aDeviceRef.get();
+			break;
+		case VIRTUAL_SOURCE:
+		case VIRTUAL_DESTINATION:
+		default:
+			deviceRef = Integer.MIN_VALUE;
+		}
 	}
 
 	@Override

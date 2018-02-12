@@ -12,21 +12,20 @@ import org.randomcoder.midi.mac.coremidi.MIDIPacketList;
 
 import com.sun.jna.Pointer;
 
-public class MacMidiSourceTransmitter implements MidiDeviceTransmitter {
+public class MacMidiVirtualDestinationTransmitter implements MidiDeviceTransmitter {
 
 	private final int id;
-	private final MacMidiSource source;
+	private final MacMidiVirtualDestination destination;
 	private final CoreMidi midi;
 	private final AtomicReference<Receiver> receiverHolder = new AtomicReference<>(null);
 
 	private volatile Integer clientId;
-	private volatile Integer inputPortId;
-	private volatile Pointer connRef;
+	private volatile Integer destId;
 	private volatile boolean open = false;
 
-	public MacMidiSourceTransmitter(MacMidiSource source, int id) {
+	public MacMidiVirtualDestinationTransmitter(MacMidiVirtualDestination destination, int id) {
 		this.id = id;
-		this.source = source;
+		this.destination = destination;
 		this.midi = CoreMidi.getInstance();
 	}
 
@@ -35,18 +34,16 @@ public class MacMidiSourceTransmitter implements MidiDeviceTransmitter {
 			return;
 		}
 
-		String clientName = String.format("MacMidiSourceTransmitter:%d:%d",
-				source.getDeviceInfo().getUniqueId(), id);
+		String clientName = String.format("MacMidiVirtualDestinationTransmitter:%d:%d",
+				destination.getDeviceInfo().getUniqueId(), id);
 
-		String inputPortName = String.format("MacMidiInputPort:%d:%d",
-				source.getDeviceInfo().getUniqueId(), id);
+		String destName = destination.getDeviceInfo().getDescription();
 
-		source.open();
+		destination.open();
 
 		clientId = midi.createClient(clientName, (m, t) -> {
 		});
-		inputPortId = midi.createInputPort(inputPortName, clientId, this::handleMidi);
-		connRef = midi.connectSource(inputPortId, source.getDeviceRef());
+		destId = midi.createDestination(destName, clientId, this::handleMidi);
 
 		open = true;
 	}
@@ -71,15 +68,9 @@ public class MacMidiSourceTransmitter implements MidiDeviceTransmitter {
 	public void close() {
 		receiverHolder.set(null);
 
-		if (connRef != null) {
-			if (inputPortId != null) {
-				midi.disconnectSource(inputPortId, source.getDeviceRef(), connRef);
-			}
-			connRef = null;
-		}
-		if (inputPortId != null) {
-			midi.closeInputPort(inputPortId);
-			inputPortId = null;
+		if (destId != null) {
+			midi.closeDestination(destId);
+			destId = null;
 		}
 
 		if (clientId != null) {
@@ -101,8 +92,8 @@ public class MacMidiSourceTransmitter implements MidiDeviceTransmitter {
 	}
 
 	@Override
-	public MacMidiSource getMidiDevice() {
-		return source;
+	public MacMidiVirtualDestination getMidiDevice() {
+		return destination;
 	}
 
 }

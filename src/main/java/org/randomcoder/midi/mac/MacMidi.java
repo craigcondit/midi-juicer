@@ -339,4 +339,8 @@ public class MacMidi {
 		return MacMidiDeviceProvider.getInstance().isDeviceSupported(device.getDeviceInfo());
 	}
 
+	public static MidiDevice createVirtualDestination(String name, String vendor, String description, String version) {
+		return MacMidiDeviceProvider.getInstance().createVirtualDestination(name, vendor, description, version);
+	}
+
 }
