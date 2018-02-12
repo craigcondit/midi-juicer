@@ -66,8 +66,6 @@ public class MacMidiSourceTransmitter implements MidiDeviceTransmitter {
 			return;
 		}
 
-		LOG.debug("Got MIDI packet list");
-
 		// go through packets
 		MIDIPacketList pList = new MIDIPacketList(pktlist, 0);
 

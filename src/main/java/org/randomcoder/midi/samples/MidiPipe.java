@@ -6,11 +6,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 
+import org.randomcoder.midi.MidiFilter;
 import org.randomcoder.midi.mac.MacMidi;
 import org.randomcoder.midi.mac.RunLoop;
 import org.slf4j.Logger;
@@ -49,8 +53,33 @@ public class MidiPipe {
 					try (MidiDevice outDev = output.get(); Receiver receiver = outDev.getReceiver()) {
 						LOG.debug("Opened receiver for device: {}", outDev);
 
-						transmitter.setReceiver(output.get().getReceiver());
-						LOG.debug("Connected input -> output");
+						Receiver dest = output.get().getReceiver();
+						MidiFilter filter = (m, t) -> {
+							if (!(m instanceof ShortMessage)) {
+								return new MidiMessage[] { m };
+							}
+							ShortMessage sm = (ShortMessage) m;
+							if (sm.getStatus() == ShortMessage.NOTE_ON || sm.getStatus() == ShortMessage.NOTE_OFF) {
+								// note, let's make it a chord
+								int note1 = sm.getData1();
+								int note2 = note1 + 3;
+								int note3 = note1 + 7;
+								try {
+									return new MidiMessage[] {
+											sm,
+											new ShortMessage(sm.getStatus(), note2, sm.getData2()),
+											new ShortMessage(sm.getStatus(), note3, sm.getData2()) };
+								} catch (InvalidMidiDataException e) {
+									return null;
+								}
+							} else {
+								return new MidiMessage[] { sm };
+							}
+						};
+
+						transmitter.setReceiver(MidiFilter.toReceiver(dest, filter));
+
+						LOG.debug("Connected input -> filter -> output");
 					}
 
 					while (true) {

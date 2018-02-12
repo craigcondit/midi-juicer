@@ -228,6 +228,10 @@ public class MacMidi {
 	private static void handleMidiNotification(Pointer nRef, Pointer context) {
 		MIDINotification notification = MIDINotification.fromNative(nRef, 0);
 
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("MIDI notification received: {}", notification);
+		}
+
 		switch (notification.getType()) {
 		case kMIDIMsgIOError:
 			handleIOError((MIDINotification.IOError) notification);
