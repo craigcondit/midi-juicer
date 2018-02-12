@@ -26,8 +26,8 @@ public class MidiPipe {
 			if (MacMidi.available()) {
 				MacMidi.init();
 
-				MacMidi.addSetupChangedListener(() -> {
-					LOG.info("MIDI setup changed");
+				MacMidi.addSetupChangedListener(e -> {
+					LOG.info("MIDI setup changed: {}", e);
 				});
 			}
 

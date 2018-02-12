@@ -42,10 +42,10 @@ public class MacMidiSourceTransmitter implements MidiDeviceTransmitter {
 			return;
 		}
 
-		String clientName = String.format("transmitter:%d:%d",
+		String clientName = String.format("MacMidiSourceTransmitter:%d:%d",
 				source.getDeviceInfo().getUniqueId(), id);
 
-		String inputPortName = String.format("input:%d:%d",
+		String inputPortName = String.format("MacMidiInputPort:%d:%d",
 				source.getDeviceInfo().getUniqueId(), id);
 
 		source.open();

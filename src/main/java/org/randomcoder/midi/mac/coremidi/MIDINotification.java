@@ -1,13 +1,8 @@
 package org.randomcoder.midi.mac.coremidi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sun.jna.Pointer;
 
 abstract public class MIDINotification {
-
-	private static final Logger LOG = LoggerFactory.getLogger(MIDINotification.class);
 
 	private final MIDINotificationMessageID type;
 
@@ -20,8 +15,6 @@ abstract public class MIDINotification {
 	}
 
 	public static MIDINotification fromNative(Pointer p, int offset) {
-		LOG.debug("MIDI notification received");
-
 		MIDINotificationMessageID type = MIDINotificationMessageID.byValue(p.getInt(offset));
 		offset += 4;
 		int size = p.getInt(offset) - 8;
@@ -103,7 +96,7 @@ abstract public class MIDINotification {
 
 	public static class ObjectRemoved extends MIDINotification.ObjectAddedOrRemoved {
 		public ObjectRemoved(int parent, MIDIObjectType parentType, int child, MIDIObjectType childType) {
-			super(MIDINotificationMessageID.kMIDIMsgObjectAdded, parent, parentType, child, childType);
+			super(MIDINotificationMessageID.kMIDIMsgObjectRemoved, parent, parentType, child, childType);
 		}
 
 		@Override

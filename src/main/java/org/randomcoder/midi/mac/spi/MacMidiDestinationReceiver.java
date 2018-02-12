@@ -31,10 +31,10 @@ public class MacMidiDestinationReceiver implements MidiDeviceReceiver {
 			return;
 		}
 
-		String clientName = String.format("receiver:%d:%d",
+		String clientName = String.format("MacMidiDestinationReceiver:%d:%d",
 				destination.getDeviceInfo().getUniqueId(), id);
 
-		String outputPortName = String.format("output:%d:%d",
+		String outputPortName = String.format("MacMidiOutputPort:%d:%d",
 				destination.getDeviceInfo().getUniqueId(), id);
 
 		destination.open();

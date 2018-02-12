@@ -280,7 +280,7 @@ public class RunLoop implements Closeable {
 
 				long elapsed = System.currentTimeMillis() - startTime;
 				if (elapsed > 1000) {
-					LOG.debug("Called CFRunLoopRunInMode {} times: {} finished, {} stopped, {} timed out, {} other",
+					LOG.trace("Called CFRunLoopRunInMode {} times: {} finished, {} stopped, {} timed out, {} other",
 							runCount, finishedCount, stoppedCount, timedOutCount, otherCount);
 					startTime = System.currentTimeMillis();
 				}

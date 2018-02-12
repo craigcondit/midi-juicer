@@ -15,8 +15,26 @@ public class MidiListener {
 			if (MacMidi.available()) {
 				MacMidi.init();
 
-				MacMidi.addSetupChangedListener(() -> {
-					LOG.info("MIDI setup changed");
+				MacMidi.addSetupChangedListener(e -> {
+					LOG.info("MIDI setup changed: {}", e);
+				});
+				MacMidi.addObjectAddedListener(e -> {
+					LOG.info("MIDI object added: {}", e);
+				});
+				MacMidi.addObjectRemovedListener(e -> {
+					LOG.info("MIDI object removed: {}", e);
+				});
+				MacMidi.addPropertyChangedListener(e -> {
+					LOG.info("MIDI property changed: {}", e);
+				});
+				MacMidi.addIOErrorListener(e -> {
+					LOG.info("MIDI I/O error: {}", e);
+				});
+				MacMidi.addThruConnectionsChangedListener(e -> {
+					LOG.info("MIDI thru connectoins changed: {}", e);
+				});
+				MacMidi.addSerialPortOwnerChangedListener(e -> {
+					LOG.info("MIDI serial port owner changed: {}", e);
 				});
 			}
 
