@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
@@ -58,14 +59,14 @@
 		<junit.version>4.12</junit.version>
 		<mockito.version>2.12.0</mockito.version>
 		<maven.project.info.reports.plugin.version>2.9</maven.project.info.reports.plugin.version>
-		<jacoco.maven.plugin.version>0.8.0</jacoco.maven.plugin.version>
-		<maven.enforcer.plugin.version>3.0.0-M1</maven.enforcer.plugin.version>
-		<maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
-		<maven.surefire.report.plugin.version>2.20.1</maven.surefire.report.plugin.version>
-		<maven.javadoc.plugin.version>3.0.0</maven.javadoc.plugin.version>
+		<jacoco.maven.plugin.version>0.8.1</jacoco.maven.plugin.version>
+		<maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
+		<maven.surefire.report.plugin.version>2.21.0</maven.surefire.report.plugin.version>
+		<maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
 		<maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-		<maven.shade.plugin.version>3.1.0</maven.shade.plugin.version>
+		<maven.shade.plugin.version>3.1.1</maven.shade.plugin.version>
 		<maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
+		<maven.enforcer.plugin.version>3.0.0-M1</maven.enforcer.plugin.version>
 		<javafx.maven.plugin.version>8.8.3</javafx.maven.plugin.version>
 	</properties>
 	<dependencies>
@@ -113,7 +114,6 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>${maven.enforcer.plugin.version}</version>
 				<executions>
 					<execution>
 						<id>enforce-maven</id>
@@ -128,22 +128,26 @@
 							<version>3.5</version>
 						</requireMavenVersion>
 						<requireJavaVersion>
-							<version>9</version>
+							<version>10</version>
 						</requireJavaVersion>
 					</rules>
 				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven.compiler.plugin.version}</version>
 				<configuration>
-					<source>9</source>
-					<target>9</target>
+					<release>10</release>
+					<dependencies>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm</artifactId>
+							<version>6.1.1</version> <!-- Use newer version of ASM -->
+						</dependency>
+					</dependencies>
 				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>${maven.shade.plugin.version}</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -182,12 +186,10 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${maven.surefire.plugin.version}</version>
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacoco.maven.plugin.version}</version>
 				<configuration>
 					<excludes>
 						<exclude>org/randomcoder/midi/config/**/*.class</exclude>
@@ -213,6 +215,31 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
+				<plugin>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<version>${maven.enforcer.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>${maven.compiler.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>${maven.release.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>${maven.surefire.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>${maven.shade.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco.maven.plugin.version}</version>
+				</plugin>
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
