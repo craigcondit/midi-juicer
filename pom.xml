@@ -54,12 +54,14 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jna.version>4.5.1</jna.version>
+		<openjfx.version>11</openjfx.version>
+		<jna.version>4.5.0</jna.version>
 		<jool.version>0.9.12</jool.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<junit.version>4.12</junit.version>
-		<mockito.version>2.12.0</mockito.version>
+		<mockito.version>2.22.0</mockito.version>
 		<maven.project.info.reports.plugin.version>2.9</maven.project.info.reports.plugin.version>
-		<jacoco.maven.plugin.version>0.8.1</jacoco.maven.plugin.version>
+		<jacoco.maven.plugin.version>0.8.2</jacoco.maven.plugin.version>
 		<maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
 		<maven.surefire.report.plugin.version>2.21.0</maven.surefire.report.plugin.version>
 		<maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
@@ -70,6 +72,36 @@
 		<javafx.maven.plugin.version>8.8.3</javafx.maven.plugin.version>
 	</properties>
 	<dependencies>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-base</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-fxml</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-graphics</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-media</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-web</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna</artifactId>
@@ -128,7 +160,7 @@
 							<version>3.5</version>
 						</requireMavenVersion>
 						<requireJavaVersion>
-							<version>10</version>
+							<version>11</version>
 						</requireJavaVersion>
 					</rules>
 				</configuration>
@@ -136,12 +168,12 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<release>10</release>
+					<release>11</release>
 					<dependencies>
 						<dependency>
 							<groupId>org.ow2.asm</groupId>
 							<artifactId>asm</artifactId>
-							<version>6.1.1</version> <!-- Use newer version of ASM -->
+							<version>6.2.1</version> <!-- Use newer version of ASM -->
 						</dependency>
 					</dependencies>
 				</configuration>
