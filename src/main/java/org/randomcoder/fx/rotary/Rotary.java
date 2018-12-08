@@ -1,249 +1,253 @@
 package org.randomcoder.fx.rotary;
 
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
-import org.randomcoder.fx.util.PropUtils;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.css.PseudoClass;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
+import org.randomcoder.fx.util.PropUtils;
+
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 public class Rotary extends Control {
 
-    public static final PseudoClass POL_NORMAL_PSEUDO_CLASS = PseudoClass.getPseudoClass("pol-normal");
-    public static final PseudoClass POL_REVERSED_PSEUDO_CLASS = PseudoClass.getPseudoClass("pol-reversed");
-    public static final PseudoClass POL_NONE_PSEUDO_CLASS = PseudoClass.getPseudoClass("pol-none");
+  public static final PseudoClass POL_NORMAL_PSEUDO_CLASS =
+      PseudoClass.getPseudoClass("pol-normal");
+  public static final PseudoClass POL_REVERSED_PSEUDO_CLASS =
+      PseudoClass.getPseudoClass("pol-reversed");
+  public static final PseudoClass POL_NONE_PSEUDO_CLASS =
+      PseudoClass.getPseudoClass("pol-none");
 
-    private final DoubleProperty percentage;
-    private final DoubleProperty minValue;
-    private final DoubleProperty maxValue;
-    private final ObjectProperty<Polarity> polarity;
-    private final BooleanProperty mouseEditable;
-    private final BooleanProperty labelEditable;
-    private final BooleanProperty automated;
-    private final ObjectProperty<Function<Rotary, String>> labelValueGenerator;
-    private final ObjectProperty<BiConsumer<Rotary, String>> labelValueHandler;
+  private final DoubleProperty percentage;
+  private final DoubleProperty minValue;
+  private final DoubleProperty maxValue;
+  private final ObjectProperty<Polarity> polarity;
+  private final BooleanProperty mouseEditable;
+  private final BooleanProperty labelEditable;
+  private final BooleanProperty automated;
+  private final ObjectProperty<Function<Rotary, String>> labelValueGenerator;
+  private final ObjectProperty<BiConsumer<Rotary, String>> labelValueHandler;
 
-    public Rotary() {
-	getStyleClass().add("rotary");
-	getStylesheets().add(getClass().getResource("rotary.css").toExternalForm());
-	percentage = createPercentage();
-	minValue = createMinValue();
-	maxValue = createMaxValue();
-	polarity = createPolarity();
-	mouseEditable = createMouseEditable();
-	labelEditable = createLabelEditable();
-	automated = createAutomated();
-	labelValueGenerator = createLabelValueGenerator();
-	labelValueHandler = createLabelValueHandler();
+  public Rotary() {
+    getStyleClass().add("rotary");
+    getStylesheets().add(getClass().getResource("rotary.css").toExternalForm());
+    percentage = createPercentage();
+    minValue = createMinValue();
+    maxValue = createMaxValue();
+    polarity = createPolarity();
+    mouseEditable = createMouseEditable();
+    labelEditable = createLabelEditable();
+    automated = createAutomated();
+    labelValueGenerator = createLabelValueGenerator();
+    labelValueHandler = createLabelValueHandler();
+  }
+
+  private DoubleProperty createPercentage() {
+    return PropUtils.doubleProperty(this, "percentage", 0d);
+  }
+
+  private DoubleProperty createMinValue() {
+    return PropUtils.doubleProperty(this, "minValue", 0d);
+  }
+
+  private DoubleProperty createMaxValue() {
+    return PropUtils.doubleProperty(this, "maxValue", 0d);
+  }
+
+  private BooleanProperty createMouseEditable() {
+    return PropUtils.booleanProperty(this, "mouseEditable", true);
+  }
+
+  private BooleanProperty createLabelEditable() {
+    return PropUtils.booleanProperty(this, "labelEditable", true);
+  }
+
+  private BooleanProperty createAutomated() {
+    return PropUtils.booleanProperty(this, "automated", false);
+  }
+
+  private ObjectProperty<Polarity> createPolarity() {
+    return PropUtils.objectProperty(this, "polarity", Polarity.NORMAL, v -> {
+      pseudoClassStateChanged(POL_NORMAL_PSEUDO_CLASS, v == Polarity.NORMAL);
+      pseudoClassStateChanged(POL_REVERSED_PSEUDO_CLASS,
+          v == Polarity.REVERSED);
+      pseudoClassStateChanged(POL_NONE_PSEUDO_CLASS, v == Polarity.NONE);
+    });
+  }
+
+  private ObjectProperty<BiConsumer<Rotary, String>> createLabelValueHandler() {
+    return PropUtils.objectProperty(this, "labelValueHandler", (t, s) -> {
+      StringBuilder buf = new StringBuilder();
+      for (char c : s.toCharArray()) {
+        if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
+          buf.append(c);
+        }
+      }
+      t.setPercentage(Double.parseDouble(buf.toString()) / 100);
+    });
+  }
+
+  private ObjectProperty<Function<Rotary, String>> createLabelValueGenerator() {
+    return PropUtils.objectProperty(this, "labelValueGenerator",
+        t -> String.format("%d", (int) Math.round(t.getPercentage() * 100)));
+  }
+
+  @Override protected Skin<Rotary> createDefaultSkin() {
+    return new RotarySkin(this);
+  }
+
+  public DoubleProperty percentageProperty() {
+    return percentage;
+  }
+
+  public DoubleProperty minValueProperty() {
+    return minValue;
+  }
+
+  public DoubleProperty maxValueProperty() {
+    return maxValue;
+  }
+
+  public BooleanProperty labelEditableProperty() {
+    return labelEditable;
+  }
+
+  public BooleanProperty mouseEditableProperty() {
+    return mouseEditable;
+  }
+
+  public BooleanProperty automatedProperty() {
+    return automated;
+  }
+
+  public boolean isLabelEditable() {
+    return labelEditableProperty().get();
+  }
+
+  public void setLabelEditable(boolean labelEditable) {
+    this.labelEditable.set(labelEditable);
+  }
+
+  public boolean isMouseEditable() {
+    return mouseEditableProperty().get();
+  }
+
+  public void setMouseEditable(boolean mouseEditable) {
+    this.mouseEditable.set(mouseEditable);
+  }
+
+  public boolean isAutomated() {
+    return automatedProperty().get();
+  }
+
+  public void setAutomated(boolean automated) {
+    this.automated.set(automated);
+  }
+
+  public ObjectProperty<Function<Rotary, String>> labelValueGeneratorProperty() {
+    return labelValueGenerator;
+  }
+
+  public void setLabelValueGenerator(
+      Function<Rotary, String> labelValueGenerator) {
+    labelValueGeneratorProperty().set(labelValueGenerator);
+  }
+
+  public Function<Rotary, String> getLabelValueGenerator() {
+    return labelValueGeneratorProperty().get();
+  }
+
+  public ObjectProperty<BiConsumer<Rotary, String>> labelValueHandlerProperty() {
+    return labelValueHandler;
+  }
+
+  public void setLabelValueHandler(
+      BiConsumer<Rotary, String> labelValueHandler) {
+    labelValueHandlerProperty().set(labelValueHandler);
+  }
+
+  public BiConsumer<Rotary, String> getLabelValueHandler() {
+    return labelValueHandlerProperty().get();
+  }
+
+  protected double calculatePercentageFromCurrent(double currentValue) {
+    double max = maxValueProperty().get();
+    double min = minValueProperty().get();
+
+    if (min == max) {
+      return 0d;
     }
 
-    private DoubleProperty createPercentage() {
-	return PropUtils.doubleProperty(this, "percentage", 0d);
+    // bounds check
+    if (min < max) {
+      currentValue = Math.min(Math.max(currentValue, min), max);
+    } else {
+      currentValue = Math.min(Math.max(currentValue, max), min);
     }
 
-    private DoubleProperty createMinValue() {
-	return PropUtils.doubleProperty(this, "minValue", 0d);
-    }
+    double range = Math.abs(max - min);
+    double scaled = currentValue - min;
+    double pc = scaled / range;
 
-    private DoubleProperty createMaxValue() {
-	return PropUtils.doubleProperty(this, "maxValue", 0d);
-    }
+    return pc;
+  }
 
-    private BooleanProperty createMouseEditable() {
-	return PropUtils.booleanProperty(this, "mouseEditable", true);
-    }
+  protected double calculateCurrentFromPercentage() {
+    double min = minValueProperty().get();
+    double max = maxValueProperty().get();
+    double pc = percentageProperty().get();
 
-    private BooleanProperty createLabelEditable() {
-	return PropUtils.booleanProperty(this, "labelEditable", true);
-    }
+    double range = max - min;
+    double scaled = range * pc;
+    double offset = scaled + min;
 
-    private BooleanProperty createAutomated() {
-	return PropUtils.booleanProperty(this, "automated", false);
-    }
+    return offset;
+  }
 
-    private ObjectProperty<Polarity> createPolarity() {
-	return PropUtils.objectProperty(this, "polarity", Polarity.NORMAL, v -> {
-	    pseudoClassStateChanged(POL_NORMAL_PSEUDO_CLASS, v == Polarity.NORMAL);
-	    pseudoClassStateChanged(POL_REVERSED_PSEUDO_CLASS, v == Polarity.REVERSED);
-	    pseudoClassStateChanged(POL_NONE_PSEUDO_CLASS, v == Polarity.NONE);
-	});
-    }
+  public ObjectProperty<Polarity> polarityProperty() {
+    return polarity;
+  }
 
-    private ObjectProperty<BiConsumer<Rotary, String>> createLabelValueHandler() {
-	return PropUtils.objectProperty(this, "labelValueHandler", (t, s) -> {
-	    StringBuilder buf = new StringBuilder();
-	    for (char c : s.toCharArray()) {
-		if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
-		    buf.append(c);
-		}
-	    }
-	    t.setPercentage(Double.parseDouble(buf.toString()) / 100);
-	});
-    }
+  public double getMinValue() {
+    return minValueProperty().get();
+  }
 
-    private ObjectProperty<Function<Rotary, String>> createLabelValueGenerator() {
-	return PropUtils.objectProperty(this, "labelValueGenerator",
-		t -> String.format("%d", (int) Math.round(t.getPercentage() * 100)));
-    }
+  public void setMinValue(double minValue) {
+    minValueProperty().set(minValue);
+  }
 
-    @Override
-    protected Skin<Rotary> createDefaultSkin() {
-	return new RotarySkin(this);
-    }
+  public double getMaxValue() {
+    return maxValueProperty().get();
+  }
 
-    public DoubleProperty percentageProperty() {
-	return percentage;
-    }
+  public void setMaxValue(double maxValue) {
+    maxValueProperty().set(maxValue);
+  }
 
-    public DoubleProperty minValueProperty() {
-	return minValue;
-    }
+  public double getCurrentValue() {
+    return calculateCurrentFromPercentage();
+  }
 
-    public DoubleProperty maxValueProperty() {
-	return maxValue;
-    }
+  public void setCurrentValue(double currentValue) {
+    setPercentage(calculatePercentageFromCurrent(currentValue));
+  }
 
-    public BooleanProperty labelEditableProperty() {
-	return labelEditable;
-    }
+  public double getPercentage() {
+    return percentageProperty().get();
+  }
 
-    public BooleanProperty mouseEditableProperty() {
-	return mouseEditable;
-    }
+  public void setPercentage(double percentage) {
+    this.percentageProperty().set(Math.min(Math.max(percentage, 0d), 1d));
+  }
 
-    public BooleanProperty automatedProperty() {
-	return automated;
-    }
+  public Polarity getPolarity() {
+    return polarityProperty().get();
+  }
 
-    public boolean isLabelEditable() {
-	return labelEditableProperty().get();
-    }
-
-    public void setLabelEditable(boolean labelEditable) {
-	this.labelEditable.set(labelEditable);
-    }
-
-    public boolean isMouseEditable() {
-	return mouseEditableProperty().get();
-    }
-
-    public void setMouseEditable(boolean mouseEditable) {
-	this.mouseEditable.set(mouseEditable);
-    }
-
-    public boolean isAutomated() {
-	return automatedProperty().get();
-    }
-
-    public void setAutomated(boolean automated) {
-	this.automated.set(automated);
-    }
-
-    public ObjectProperty<Function<Rotary, String>> labelValueGeneratorProperty() {
-	return labelValueGenerator;
-    }
-
-    public void setLabelValueGenerator(Function<Rotary, String> labelValueGenerator) {
-	labelValueGeneratorProperty().set(labelValueGenerator);
-    }
-
-    public Function<Rotary, String> getLabelValueGenerator() {
-	return labelValueGeneratorProperty().get();
-    }
-
-    public ObjectProperty<BiConsumer<Rotary, String>> labelValueHandlerProperty() {
-	return labelValueHandler;
-    }
-
-    public void setLabelValueHandler(BiConsumer<Rotary, String> labelValueHandler) {
-	labelValueHandlerProperty().set(labelValueHandler);
-    }
-
-    public BiConsumer<Rotary, String> getLabelValueHandler() {
-	return labelValueHandlerProperty().get();
-    }
-
-    protected double calculatePercentageFromCurrent(double currentValue) {
-	double max = maxValueProperty().get();
-	double min = minValueProperty().get();
-
-	if (min == max) {
-	    return 0d;
-	}
-
-	// bounds check
-	if (min < max) {
-	    currentValue = Math.min(Math.max(currentValue, min), max);
-	} else {
-	    currentValue = Math.min(Math.max(currentValue, max), min);
-	}
-
-	double range = Math.abs(max - min);
-	double scaled = currentValue - min;
-	double pc = scaled / range;
-
-	return pc;
-    }
-
-    protected double calculateCurrentFromPercentage() {
-	double min = minValueProperty().get();
-	double max = maxValueProperty().get();
-	double pc = percentageProperty().get();
-
-	double range = max - min;
-	double scaled = range * pc;
-	double offset = scaled + min;
-
-	return offset;
-    }
-
-    public ObjectProperty<Polarity> polarityProperty() {
-	return polarity;
-    }
-
-    public double getMinValue() {
-	return minValueProperty().get();
-    }
-
-    public void setMinValue(double minValue) {
-	minValueProperty().set(minValue);
-    }
-
-    public double getMaxValue() {
-	return maxValueProperty().get();
-    }
-
-    public void setMaxValue(double maxValue) {
-	maxValueProperty().set(maxValue);
-    }
-
-    public double getCurrentValue() {
-	return calculateCurrentFromPercentage();
-    }
-
-    public void setCurrentValue(double currentValue) {
-	setPercentage(calculatePercentageFromCurrent(currentValue));
-    }
-
-    public double getPercentage() {
-	return percentageProperty().get();
-    }
-
-    public void setPercentage(double percentage) {
-	this.percentageProperty().set(Math.min(Math.max(percentage, 0d), 1d));
-    }
-
-    public Polarity getPolarity() {
-	return polarityProperty().get();
-    }
-
-    public void setPolarity(Polarity polarity) {
-	polarityProperty().set(polarity);
-    }
+  public void setPolarity(Polarity polarity) {
+    polarityProperty().set(polarity);
+  }
 
 }

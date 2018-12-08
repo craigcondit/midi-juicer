@@ -1,24 +1,24 @@
 package org.randomcoder.midi.mac.pthread;
 
 public class PThread {
-	private static PThread INSTANCE = new PThread();
+  private static PThread INSTANCE = new PThread();
 
-	public static PThread getInstance() {
-		return INSTANCE;
-	}
+  public static PThread getInstance() {
+    return INSTANCE;
+  }
 
-	static void setInstance(PThread instance) {
-		INSTANCE = instance;
-	}
+  static void setInstance(PThread instance) {
+    INSTANCE = instance;
+  }
 
-	PThread() {
-	}
+  PThread() {
+  }
 
-	PThreadPeer peer() {
-		return PThreadServiceFactory.getPeer();
-	}
+  PThreadPeer peer() {
+    return PThreadServiceFactory.getPeer();
+  }
 
-	public boolean isMainThread() {
-		return peer().pthread_main_np() != 0;
-	}
+  public boolean isMainThread() {
+    return peer().pthread_main_np() != 0;
+  }
 }

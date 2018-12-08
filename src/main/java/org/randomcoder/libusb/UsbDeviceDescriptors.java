@@ -1,25 +1,23 @@
 package org.randomcoder.libusb;
 
+import com.sun.jna.Pointer;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import com.sun.jna.Pointer;
-
 public class UsbDeviceDescriptors {
 
-	final Pointer handle;
+  final Pointer handle;
 
-	public final UsbDeviceDescriptor[] descriptors;
+  public final UsbDeviceDescriptor[] descriptors;
 
-	UsbDeviceDescriptors(Pointer handle, UsbDeviceDescriptor[] descriptors) {
-		this.handle = handle;
-		this.descriptors = descriptors;
-	}
+  UsbDeviceDescriptors(Pointer handle, UsbDeviceDescriptor[] descriptors) {
+    this.handle = handle;
+    this.descriptors = descriptors;
+  }
 
-	@Override
-	public String toString() {
-		return Arrays.stream(descriptors)
-				.map(UsbDeviceDescriptor::toString)
-				.collect(Collectors.joining(String.format("%n")));
-	}
+  @Override public String toString() {
+    return Arrays.stream(descriptors).map(UsbDeviceDescriptor::toString)
+        .collect(Collectors.joining(String.format("%n")));
+  }
 }

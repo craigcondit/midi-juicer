@@ -1,99 +1,98 @@
 package org.randomcoder.midi.mac.spi;
 
-import java.util.concurrent.atomic.AtomicReference;
+import com.sun.jna.Pointer;
+import org.randomcoder.midi.mac.coremidi.CoreMidi;
+import org.randomcoder.midi.mac.coremidi.MIDIPacketList;
 
 import javax.sound.midi.MidiDeviceTransmitter;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
+import java.util.concurrent.atomic.AtomicReference;
 
-import org.randomcoder.midi.mac.coremidi.CoreMidi;
-import org.randomcoder.midi.mac.coremidi.MIDIPacketList;
+public class MacMidiVirtualDestinationTransmitter
+    implements MidiDeviceTransmitter {
 
-import com.sun.jna.Pointer;
+  private final int id;
+  private final MacMidiVirtualDestination destination;
+  private final CoreMidi midi;
+  private final AtomicReference<Receiver> receiverHolder =
+      new AtomicReference<>(null);
 
-public class MacMidiVirtualDestinationTransmitter implements MidiDeviceTransmitter {
+  private volatile Integer clientId;
+  private volatile Integer destId;
+  private volatile boolean open = false;
 
-	private final int id;
-	private final MacMidiVirtualDestination destination;
-	private final CoreMidi midi;
-	private final AtomicReference<Receiver> receiverHolder = new AtomicReference<>(null);
+  public MacMidiVirtualDestinationTransmitter(
+      MacMidiVirtualDestination destination, int id) {
+    this.id = id;
+    this.destination = destination;
+    this.midi = CoreMidi.getInstance();
+  }
 
-	private volatile Integer clientId;
-	private volatile Integer destId;
-	private volatile boolean open = false;
+  synchronized void open() throws MidiUnavailableException {
+    if (open) {
+      return;
+    }
 
-	public MacMidiVirtualDestinationTransmitter(MacMidiVirtualDestination destination, int id) {
-		this.id = id;
-		this.destination = destination;
-		this.midi = CoreMidi.getInstance();
-	}
+    String clientName = String
+        .format("MacMidiVirtualDestinationTransmitter:%d:%d",
+            destination.getDeviceInfo().getUniqueId(), id);
 
-	synchronized void open() throws MidiUnavailableException {
-		if (open) {
-			return;
-		}
+    String destName = destination.getDeviceInfo().getDescription();
 
-		String clientName = String.format("MacMidiVirtualDestinationTransmitter:%d:%d",
-				destination.getDeviceInfo().getUniqueId(), id);
+    destination.open();
 
-		String destName = destination.getDeviceInfo().getDescription();
+    clientId = midi.createClient(clientName, (m, t) -> {
+    });
+    destId = midi.createDestination(destName, clientId, this::handleMidi);
 
-		destination.open();
+    open = true;
+  }
 
-		clientId = midi.createClient(clientName, (m, t) -> {
-		});
-		destId = midi.createDestination(destName, clientId, this::handleMidi);
+  private void handleMidi(Pointer pktlist, Pointer readProcRefCon,
+      Pointer srcConnRefCon) {
+    Receiver receiver = receiverHolder.get();
 
-		open = true;
-	}
+    // short-circuit out if receiver is not set or transmitter inactive
+    if (receiver == null || !open) {
+      return;
+    }
 
-	private void handleMidi(Pointer pktlist, Pointer readProcRefCon, Pointer srcConnRefCon) {
-		Receiver receiver = receiverHolder.get();
+    // go through packets
+    MIDIPacketList pList = new MIDIPacketList(pktlist, 0);
 
-		// short-circuit out if receiver is not set or transmitter inactive
-		if (receiver == null || !open) {
-			return;
-		}
+    for (MidiMessage message : MidiMessageConverter.coreMidiToJava(pList)) {
+      receiver.send(message, -1L);
+    }
+  }
 
-		// go through packets
-		MIDIPacketList pList = new MIDIPacketList(pktlist, 0);
+  @Override public void close() {
+    receiverHolder.set(null);
 
-		for (MidiMessage message : MidiMessageConverter.coreMidiToJava(pList)) {
-			receiver.send(message, -1L);
-		}
-	}
+    if (destId != null) {
+      midi.closeDestination(destId);
+      destId = null;
+    }
 
-	@Override
-	public void close() {
-		receiverHolder.set(null);
+    if (clientId != null) {
+      midi.closeClient(clientId);
+      clientId = null;
+    }
 
-		if (destId != null) {
-			midi.closeDestination(destId);
-			destId = null;
-		}
+    open = false;
+  }
 
-		if (clientId != null) {
-			midi.closeClient(clientId);
-			clientId = null;
-		}
+  @Override public Receiver getReceiver() {
+    return receiverHolder.get();
+  }
 
-		open = false;
-	}
+  @Override public void setReceiver(Receiver receiver) {
+    receiverHolder.set(receiver);
+  }
 
-	@Override
-	public Receiver getReceiver() {
-		return receiverHolder.get();
-	}
-
-	@Override
-	public void setReceiver(Receiver receiver) {
-		receiverHolder.set(receiver);
-	}
-
-	@Override
-	public MacMidiVirtualDestination getMidiDevice() {
-		return destination;
-	}
+  @Override public MacMidiVirtualDestination getMidiDevice() {
+    return destination;
+  }
 
 }
