@@ -8,14 +8,20 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
 import org.randomcoder.fx.rotary.Rotary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Juicer extends Application {
+
+  private static final Logger LOG = LoggerFactory.getLogger(Juicer.class);
 
   public static void main(String[] args) {
     Application.launch(args);
   }
 
-  @Override public void start(Stage primaryStage) throws Exception {
+  @Override
+  public void start(Stage primaryStage) {
+    LOG.debug("Starting primary stage");
 
     GridPane pane = new GridPane();
 

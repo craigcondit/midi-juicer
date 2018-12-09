@@ -94,7 +94,8 @@ public class Rotary extends Control {
         t -> String.format("%d", (int) Math.round(t.getPercentage() * 100)));
   }
 
-  @Override protected Skin<Rotary> createDefaultSkin() {
+  @Override
+  protected Skin<Rotary> createDefaultSkin() {
     return new RotarySkin(this);
   }
 
