@@ -22,6 +22,7 @@ public class MidiInput {
 
     try (RunLoop rl = RunLoop.spawn(true)) {
       if (MacMidi.available()) {
+        LOG.info("Initialized MacMidi.");
         MacMidi.init();
 
         MacMidi.addSetupChangedListener(e -> {

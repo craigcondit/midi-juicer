@@ -28,7 +28,7 @@ public class CoreFoundationServiceFactory {
   }
 
   static CoreFoundationPeer createNativePeer() {
-    return Native.loadLibrary(LIBRARY_NAME, CoreFoundationPeer.class);
+    return Native.load(LIBRARY_NAME, CoreFoundationPeer.class);
   }
 
   static NativeLibrary createNativeLibrary() {

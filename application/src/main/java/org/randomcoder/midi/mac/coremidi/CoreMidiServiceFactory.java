@@ -1,4 +1,4 @@
-package org.randomcoder.midi.mac.system;
+package org.randomcoder.midi.mac.coremidi;
 
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
@@ -6,41 +6,51 @@ import com.sun.jna.NativeLibrary;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-public class SystemServiceFactory {
-  private static final AtomicReference<SystemPeer> PEER =
+public class CoreMidiServiceFactory {
+  private static final AtomicReference<CoreMidiPeer> PEER =
       new AtomicReference<>();
   private static final AtomicReference<NativeLibrary> NATIVE_LIBRARY =
       new AtomicReference<>();
+  private static final AtomicReference<CoreMidiPropertyResolver>
+      PROPERTY_RESOLVER = new AtomicReference<>();
 
-  public static final String LIBRARY_NAME = "System";
+  public static final String LIBRARY_NAME = "CoreMIDI";
 
-  public static SystemPeer getPeer() {
-    return getOrCreate(PEER, SystemServiceFactory::createDirectPeer);
+  public static CoreMidiPeer getPeer() {
+    return getOrCreate(PEER, CoreMidiServiceFactory::createDirectPeer);
   }
 
   public static NativeLibrary getNativeLibrary() {
     return getOrCreate(NATIVE_LIBRARY,
-        SystemServiceFactory::createNativeLibrary);
+        CoreMidiServiceFactory::createNativeLibrary);
   }
 
-  static SystemPeer createDirectPeer() {
-    return new DirectSystemPeer();
+  public static CoreMidiPropertyResolver getPropertyResolver() {
+    return getOrCreate(PROPERTY_RESOLVER, DefaultCoreMidiPropertyResolver::new);
   }
 
-  static SystemPeer createNativePeer() {
-    return Native.loadLibrary(LIBRARY_NAME, SystemPeer.class);
+  static CoreMidiPeer createDirectPeer() {
+    return new DirectCoreMidiPeer();
+  }
+
+  static CoreMidiPeer createNativePeer() {
+    return Native.load(LIBRARY_NAME, CoreMidiPeer.class);
   }
 
   static NativeLibrary createNativeLibrary() {
     return NativeLibrary.getInstance(LIBRARY_NAME);
   }
 
-  static void setPeer(SystemPeer peer) {
+  static void setPeer(CoreMidiPeer peer) {
     forceSet(PEER, peer);
   }
 
   static void setNativeLibrary(NativeLibrary lib) {
     forceSet(NATIVE_LIBRARY, lib);
+  }
+
+  static void setPropertyResolver(CoreMidiPropertyResolver resolver) {
+    forceSet(PROPERTY_RESOLVER, resolver);
   }
 
   private static <T> void forceSet(AtomicReference<T> ref, T obj) {

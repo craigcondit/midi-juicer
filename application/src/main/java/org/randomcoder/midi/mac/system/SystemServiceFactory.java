@@ -1,4 +1,4 @@
-package org.randomcoder.libusb;
+package org.randomcoder.midi.mac.system;
 
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
@@ -6,33 +6,36 @@ import com.sun.jna.NativeLibrary;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-public class UsbServiceFactory {
-
-  private static final AtomicReference<UsbPeer> PEER = new AtomicReference<>();
+public class SystemServiceFactory {
+  private static final AtomicReference<SystemPeer> PEER =
+      new AtomicReference<>();
   private static final AtomicReference<NativeLibrary> NATIVE_LIBRARY =
       new AtomicReference<>();
 
-  public static final String LIBRARY_NAME = "usb-1.0.0";
+  public static final String LIBRARY_NAME = "System";
 
-  public static UsbPeer getPeer() {
-    return getOrCreate(PEER, UsbServiceFactory::createNativePeer);
+  public static SystemPeer getPeer() {
+    return getOrCreate(PEER, SystemServiceFactory::createDirectPeer);
   }
 
   public static NativeLibrary getNativeLibrary() {
-    return getOrCreate(NATIVE_LIBRARY, UsbServiceFactory::createNativeLibrary);
+    return getOrCreate(NATIVE_LIBRARY,
+        SystemServiceFactory::createNativeLibrary);
   }
 
-  static UsbPeer createNativePeer() {
-    return Native.loadLibrary(LIBRARY_NAME, UsbPeer.class);
+  static SystemPeer createDirectPeer() {
+    return new DirectSystemPeer();
+  }
+
+  static SystemPeer createNativePeer() {
+    return Native.load(LIBRARY_NAME, SystemPeer.class);
   }
 
   static NativeLibrary createNativeLibrary() {
-    NativeLibrary.addSearchPath(LIBRARY_NAME, "/opt/local/lib");
-    NativeLibrary.addSearchPath(LIBRARY_NAME, "/usr/local/lib");
     return NativeLibrary.getInstance(LIBRARY_NAME);
   }
 
-  static void setPeer(UsbPeer peer) {
+  static void setPeer(SystemPeer peer) {
     forceSet(PEER, peer);
   }
 
@@ -64,5 +67,4 @@ public class UsbServiceFactory {
     }
     return obj;
   }
-
 }
