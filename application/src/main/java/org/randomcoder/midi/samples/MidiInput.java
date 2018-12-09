@@ -22,8 +22,8 @@ public class MidiInput {
 
     try (RunLoop rl = RunLoop.spawn(true)) {
       if (MacMidi.available()) {
-        LOG.info("Initialized MacMidi.");
         MacMidi.init();
+        LOG.info("Initialized MacMidi.");
 
         MacMidi.addSetupChangedListener(e -> {
           LOG.info("MIDI setup changed: {}", e);
@@ -35,9 +35,13 @@ public class MidiInput {
       List<MidiDevice.Info> deviceInfos =
           Arrays.stream(MidiSystem.getMidiDeviceInfo())
               .filter(MacMidi::isMacMidiDevice)
-              .filter(di -> "MIDI1".equals(di.getName()))
-              .filter(di -> "Nektar".equals(di.getVendor()))
-              .filter(di -> "Impact GX49 MIDI1".equals(di.getDescription()))
+              //.filter(di -> "MIDI1".equals(di.getName()))
+              //.filter(di -> "Nektar".equals(di.getVendor()))
+              //.filter(di -> "Impact GX49 MIDI1".equals(di.getDescription()))
+              .map(c -> {
+                System.out.printf("Name: %s, Class: %s\n", c, c.getClass());
+                return c;
+              })
               .collect(Collectors.toList());
 
       List<MidiDevice> devices = deviceInfos.stream().map(di -> {

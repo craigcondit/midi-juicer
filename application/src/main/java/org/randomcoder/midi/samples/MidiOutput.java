@@ -37,9 +37,7 @@ public class MidiOutput {
       List<MidiDevice.Info> deviceInfos =
           Arrays.stream(MidiSystem.getMidiDeviceInfo())
               .filter(MacMidi::isMacMidiDevice)
-              .filter(di -> "Out".equals(di.getName()))
-              .filter(di -> "E-MU Systems,Inc.".equals(di.getVendor()))
-              .filter(di -> "E-MU XMidi1X1 Tab Out".equals(di.getDescription()))
+              .filter(di -> "MPX550".equals(di.getName()))
               .collect(Collectors.toList());
 
       List<MidiDevice> devices = deviceInfos.stream().map(di -> {

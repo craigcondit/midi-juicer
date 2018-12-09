@@ -17,4 +17,7 @@ module org.randomcoder.midi.juicer {
 
   exports org.randomcoder.midi;
   exports org.randomcoder.midi.mac.corefoundation to com.sun.jna;
+
+  provides javax.sound.midi.spi.MidiDeviceProvider
+      with org.randomcoder.midi.mac.spi.MacMidiDeviceProvider;
 }
