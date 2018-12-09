@@ -15,7 +15,7 @@
 
   <modules>
     <module>application</module>
-    <module>jlink</module>
+    <!-- <module>jlink</module> -->
   </modules>
 
   <description>MIDI Juicer (parent project)</description>
@@ -81,6 +81,7 @@
     <maven.surefire.report.plugin.version>3.0.0-M1
     </maven.surefire.report.plugin.version>
     <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
+    <maven.jar.plugin.version>3.1.0</maven.jar.plugin.version>
     <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
     <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
     <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
@@ -215,6 +216,10 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven.surefire.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven.jar.plugin.version}</version>
         </plugin>
         <plugin>
           <artifactId>maven-shade-plugin</artifactId>

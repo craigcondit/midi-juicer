@@ -19,6 +19,12 @@ public class Juicer extends Application {
     Application.launch(args);
   }
 
+  public static class Stub {
+    public static void main(String[] args) {
+      Juicer.main(args);
+    }
+  }
+
   @Override
   public void start(Stage primaryStage) {
     LOG.debug("Starting primary stage");
