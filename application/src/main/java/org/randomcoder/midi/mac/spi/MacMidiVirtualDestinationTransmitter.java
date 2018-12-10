@@ -19,6 +19,9 @@ public class MacMidiVirtualDestinationTransmitter
   private final AtomicReference<Receiver> receiverHolder =
       new AtomicReference<>(null);
 
+  private final MidiMessageConverter.ReceiveState receiveState =
+      new MidiMessageConverter.ReceiveState();
+
   private volatile Integer clientId;
   private volatile Integer destId;
   private volatile boolean open = false;
@@ -50,8 +53,11 @@ public class MacMidiVirtualDestinationTransmitter
     open = true;
   }
 
-  private void handleMidi(Pointer pktlist, Pointer readProcRefCon,
+  private void handleMidi(
+      Pointer pktlist,
+      Pointer readProcRefCon,
       Pointer srcConnRefCon) {
+
     Receiver receiver = receiverHolder.get();
 
     // short-circuit out if receiver is not set or transmitter inactive
@@ -62,7 +68,8 @@ public class MacMidiVirtualDestinationTransmitter
     // go through packets
     MIDIPacketList pList = new MIDIPacketList(pktlist, 0);
 
-    for (MidiMessage message : MidiMessageConverter.coreMidiToJava(pList)) {
+    for (MidiMessage message : MidiMessageConverter.coreMidiToJava(
+        receiveState, pList)) {
       receiver.send(message, -1L);
     }
   }

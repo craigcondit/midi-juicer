@@ -7,6 +7,7 @@
   <Loggers>
     <Logger name="org.randomcoder" level="debug"/>
     <Logger name="org.randomcoder.midi.mac.MacMidi" level="debug"/>
+    <Logger name="org.randomcoder.midi.mac.spi" level="debug"/>
     <Logger name="org.randomcoder.midi.mac.spi.MidiMessageConverter"
             level="debug"/>
     <Root level="info">

@@ -15,10 +15,34 @@ import java.util.List;
 
 public class MidiMessageConverter {
 
+  private static final byte[] EMPTY = new byte[0];
+
   private static final Logger LOG =
       LoggerFactory.getLogger(MidiMessageConverter.class);
 
-  public static List<MidiMessage> coreMidiToJava(MIDIPacketList pList) {
+  private enum ReceiveMode {
+    NORMAL, SYSEX;
+  }
+
+  public static class ReceiveState {
+    private byte[] buffer = EMPTY;
+    private ReceiveMode mode = ReceiveMode.NORMAL;
+  }
+
+  private static boolean validStatusByte(byte b) {
+    return ((b & 0xff) > 0x80) && ((b & 0xf0) != 0xf0);
+  }
+
+  private static boolean sysexStart(byte b) {
+    return b == (byte) SysexMessage.SYSTEM_EXCLUSIVE;
+  }
+
+  private static boolean sysexEnd(byte b) {
+    return b == (byte) SysexMessage.SPECIAL_SYSTEM_EXCLUSIVE;
+  }
+
+  public static List<MidiMessage> coreMidiToJava(
+      ReceiveState state, MIDIPacketList pList) {
 
     // log packets
     if (LOG.isTraceEnabled()) {
@@ -45,52 +69,89 @@ public class MidiMessageConverter {
     // convert to Java MidiMessage
     List<MidiMessage> messages = new ArrayList<>();
 
-    byte[] sysex = null;
-
     for (int i = 0; i < pList.getLength(); i++) {
       LOG.trace("Parsing packet {} of {}", i + 1, pList.getLength());
+
       MIDIPacket packet = pList.getPackets().get(i);
+      if (packet.getLength() == 0) {
+        LOG.trace("Got empty packet");
+        continue;
+      }
+
       MidiMessage message = null;
+      byte first = packet.getData()[0];
+      byte last = packet.getData()[packet.getLength() - 1];
+
       try {
-        if (packet.getLength() == 0) {
-          continue;
-        } else if (sysex != null) {
-          sysex = Arrays.copyOf(sysex, sysex.length + packet.getLength());
+        switch (state.mode) {
+        case NORMAL: {
+          if (validStatusByte(first)) {
+            // start of normal message
+            if (packet.getLength() == 1) {
+              LOG.trace("Got short message of length 1");
+              message = new ShortMessage(packet.getData()[0] & 0xff);
+            } else if (packet.getLength() == 2) {
+              LOG.trace("Got short message of length 2");
+              message = new ShortMessage(
+                  packet.getData()[0] & 0xff,
+                  packet.getData()[1] & 0xff, 0);
+            } else if (packet.getLength() == 3) {
+              LOG.trace("Got short message of length 3");
+              message = new ShortMessage(
+                  packet.getData()[0] & 0xff,
+                  packet.getData()[1] & 0xff,
+                  packet.getData()[2] & 0xff);
+            } else {
+              LOG.warn(
+                  "Got invalid short message of length {}",
+                  packet.getLength());
+              continue;
+            }
+          } else if (sysexStart(first)) {
+            // start of sysex message
+            if (!sysexEnd(last)) {
+              // packet is incomplete, copy into state
+              LOG.trace(
+                  "Got incomplete sysex message of length {}, adding to buffer",
+                  packet.getLength());
+              state.buffer =
+                  Arrays.copyOf(packet.getData(), packet.getLength());
+              state.mode = ReceiveMode.SYSEX;
+              continue;
+            }
+            LOG.trace(
+                "Got complete sysex message of length {}",
+                packet.getLength());
+            message = new SysexMessage(packet.getData(), packet.getLength());
+          } else {
+            LOG.warn("Got seemingly bad packet");
+            continue;
+          }
+        }
+        break;
+        case SYSEX: {
+          state.buffer = Arrays
+              .copyOf(state.buffer, state.buffer.length + packet.getLength());
           System.arraycopy(
               packet.getData(),
               0,
-              sysex,
-              sysex.length - packet.getLength(),
+              state.buffer,
+              state.buffer.length - packet.getLength(),
               packet.getLength());
-          byte last = packet.getData()[packet.getLength() - 1];
-          if (last != (byte) ShortMessage.END_OF_EXCLUSIVE) {
+          if (!sysexEnd(last)) {
+            LOG.trace(
+                "Got additional incomplete sysex message of length {}, adding to buffer",
+                packet.getLength());
             continue;
           }
-          message = new SysexMessage(sysex, sysex.length);
-          sysex = null;
-        } else if (packet.getData()[0]
-            == (byte) (SysexMessage.SYSTEM_EXCLUSIVE)) {
-          // start of sysex message
-          byte last = packet.getData()[packet.getLength() - 1];
-          if (last != (byte) ShortMessage.END_OF_EXCLUSIVE) {
-            sysex = Arrays.copyOf(packet.getData(), packet.getLength());
-            continue;
-          }
-          message = new SysexMessage(packet.getData(), packet.getLength());
-        } else if (packet.getLength() == 1) {
-          message = new ShortMessage(packet.getData()[0] & 0xff);
-        } else if (packet.getLength() == 2) {
-          message = new ShortMessage(
-              packet.getData()[0] & 0xff,
-              packet.getData()[1] & 0xff, 0);
-        } else if (packet.getLength() == 3) {
-          message = new ShortMessage(
-              packet.getData()[0] & 0xff,
-              packet.getData()[1] & 0xff,
-              packet.getData()[2] & 0xff);
-        } else {
-          LOG.warn("Received unknown message of length {}", packet.getLength());
-          continue;
+          LOG.trace(
+              "Got final complete sysex message of length {}, completing",
+              packet.getLength());
+          message = new SysexMessage(state.buffer, state.buffer.length);
+          state.buffer = EMPTY;
+          state.mode = ReceiveMode.NORMAL;
+        }
+        break;
         }
 
         messages.add(message);

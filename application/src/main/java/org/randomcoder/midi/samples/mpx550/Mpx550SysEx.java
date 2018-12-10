@@ -103,6 +103,7 @@ public class Mpx550SysEx {
             }
           }
           LOG.debug("Queried all parameters.");
+          Thread.sleep(600_000L);
         }
       }
 
