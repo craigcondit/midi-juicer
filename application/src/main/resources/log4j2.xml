@@ -6,9 +6,9 @@
   </Appenders>
   <Loggers>
     <Logger name="org.randomcoder" level="debug"/>
-    <Logger name="org.randomcoder.midi.mac.MacMidi" level="trace"/>
+    <Logger name="org.randomcoder.midi.mac.MacMidi" level="debug"/>
     <Logger name="org.randomcoder.midi.mac.spi.MidiMessageConverter"
-            level="trace"/>
+            level="debug"/>
     <Root level="info">
       <AppenderRef ref="stderr"/>
     </Root>

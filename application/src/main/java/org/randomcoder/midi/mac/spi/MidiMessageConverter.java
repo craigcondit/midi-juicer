@@ -8,7 +8,9 @@ import org.slf4j.LoggerFactory;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.ShortMessage;
+import javax.sound.midi.SysexMessage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MidiMessageConverter {
@@ -41,26 +43,60 @@ public class MidiMessageConverter {
     }
 
     // convert to Java MidiMessage
-    List<MidiMessage> messages = new ArrayList<>(pList.getLength());
+    List<MidiMessage> messages = new ArrayList<>();
+
+    byte[] sysex = null;
 
     for (int i = 0; i < pList.getLength(); i++) {
+      LOG.trace("Parsing packet {} of {}", i + 1, pList.getLength());
       MIDIPacket packet = pList.getPackets().get(i);
       MidiMessage message = null;
       try {
-        if (packet.getLength() == 1) {
+        if (packet.getLength() == 0) {
+          continue;
+        } else if (sysex != null) {
+          sysex = Arrays.copyOf(sysex, sysex.length + packet.getLength());
+          System.arraycopy(
+              packet.getData(),
+              0,
+              sysex,
+              sysex.length - packet.getLength(),
+              packet.getLength());
+          byte last = packet.getData()[packet.getLength() - 1];
+          if (last != (byte) ShortMessage.END_OF_EXCLUSIVE) {
+            continue;
+          }
+          message = new SysexMessage(sysex, sysex.length);
+          sysex = null;
+        } else if (packet.getData()[0]
+            == (byte) (SysexMessage.SYSTEM_EXCLUSIVE)) {
+          // start of sysex message
+          byte last = packet.getData()[packet.getLength() - 1];
+          if (last != (byte) ShortMessage.END_OF_EXCLUSIVE) {
+            sysex = Arrays.copyOf(packet.getData(), packet.getLength());
+            continue;
+          }
+          message = new SysexMessage(packet.getData(), packet.getLength());
+        } else if (packet.getLength() == 1) {
           message = new ShortMessage(packet.getData()[0] & 0xff);
         } else if (packet.getLength() == 2) {
-          message = new ShortMessage(packet.getData()[0] & 0xff,
+          message = new ShortMessage(
+              packet.getData()[0] & 0xff,
               packet.getData()[1] & 0xff, 0);
         } else if (packet.getLength() == 3) {
-          message = new ShortMessage(packet.getData()[0] & 0xff,
-              packet.getData()[1] & 0xff, packet.getData()[2] & 0xff);
+          message = new ShortMessage(
+              packet.getData()[0] & 0xff,
+              packet.getData()[1] & 0xff,
+              packet.getData()[2] & 0xff);
+        } else {
+          LOG.warn("Received unknown message of length {}", packet.getLength());
+          continue;
         }
 
         messages.add(message);
 
       } catch (InvalidMidiDataException e) {
-        LOG.warn("Invalid MIDI packet received", e);
+        LOG.warn("Invalid MIDI packet received: {}", e.getMessage());
         continue;
       }
     }
